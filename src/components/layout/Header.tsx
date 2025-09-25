@@ -33,11 +33,11 @@ export function Header() {
           <div className="flex items-center gap-3">
             <img 
               src={breadwinnersLogo} 
-              alt="Breadwinners Family Society" 
-              className="w-8 h-8 rounded-lg"
+              alt="Breadwinners Family Network" 
+              className="w-10 h-10 rounded-lg"
             />
             <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-foreground">Breadwinners Family Society</h1>
+              <h1 className="text-lg font-bold text-foreground">Breadwinners Family Network</h1>
             </div>
           </div>
         </div>
