@@ -1,3 +1,4 @@
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { Settings, Users, CreditCard, MessageSquare, BarChart3, Download, Plus } from "lucide-react";
-import React, { useState } from "react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 
@@ -92,7 +92,7 @@ const AdminDashboard = () => {
   };
 
   // Load e-pins on component mount
-  React.useEffect(() => {
+  useEffect(() => {
     const epins = JSON.parse(localStorage.getItem('epins') || '[]');
     setGeneratedEPins(epins);
   }, []);
@@ -100,8 +100,6 @@ const AdminDashboard = () => {
   const totalEPins = generatedEPins.length;
   const usedEPins = generatedEPins.filter(epin => epin.used).length;
   const availableEPins = totalEPins - usedEPins;
-
-  if (!user || user.username !== 'admin') return null;
 
   return (
     <div className="space-y-6">
