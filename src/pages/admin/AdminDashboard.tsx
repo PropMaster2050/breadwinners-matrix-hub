@@ -12,8 +12,9 @@ import Papa from "papaparse";
 interface EPin {
   id: string;
   code: string;
-  used: boolean;
+  isUsed: boolean;
   usedBy?: string;
+  usedDate?: string;
   generatedAt: string;
 }
 
@@ -42,17 +43,17 @@ const AdminDashboard = () => {
       newEPins.push({
         id: Date.now().toString() + i,
         code: generateEPinCode(),
-        used: false,
+        isUsed: false,
         generatedAt: new Date().toISOString()
       });
     }
     
     // Get existing e-pins from localStorage
-    const existingEPins = JSON.parse(localStorage.getItem('epins') || '[]');
+    const existingEPins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
     const allEPins = [...existingEPins, ...newEPins];
     
     // Save to localStorage
-    localStorage.setItem('epins', JSON.stringify(allEPins));
+    localStorage.setItem('breadwinners_epins', JSON.stringify(allEPins));
     setGeneratedEPins(allEPins);
     
     toast.success(`Successfully generated ${epinQuantity} e-pins`);
@@ -60,7 +61,7 @@ const AdminDashboard = () => {
 
   // Download e-pins as CSV
   const handleDownloadCSV = () => {
-    const epins = JSON.parse(localStorage.getItem('epins') || '[]');
+    const epins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
     
     if (epins.length === 0) {
       toast.error('No e-pins available for download');
@@ -69,7 +70,7 @@ const AdminDashboard = () => {
 
     const csvData = epins.map((epin: EPin) => ({
       'E-Pin Code': epin.code,
-      'Status': epin.used ? 'Used' : 'Available',
+      'Status': epin.isUsed ? 'Used' : 'Available',
       'Used By': epin.usedBy || 'N/A',
       'Generated Date': new Date(epin.generatedAt).toLocaleDateString('en-ZA')
     }));
@@ -93,12 +94,12 @@ const AdminDashboard = () => {
 
   // Load e-pins on component mount
   useEffect(() => {
-    const epins = JSON.parse(localStorage.getItem('epins') || '[]');
+    const epins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
     setGeneratedEPins(epins);
   }, []);
 
   const totalEPins = generatedEPins.length;
-  const usedEPins = generatedEPins.filter(epin => epin.used).length;
+  const usedEPins = generatedEPins.filter(epin => epin.isUsed).length;
   const availableEPins = totalEPins - usedEPins;
 
   return (

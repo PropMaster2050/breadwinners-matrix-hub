@@ -2,87 +2,139 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Users, TrendingUp, Shield, Zap, Award } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff, User, Lock } from "lucide-react";
 import breadwinnersLogo from "@/assets/breadwinners-logo.png";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const features = [
-    {
-      icon: Users,
-      title: "2x2 Matrix System",
-      description: "Progress through 8 levels with our proven matrix structure"
-    },
-    {
-      icon: TrendingUp,
-      title: "Guaranteed Income",
-      description: "Earn R50 per level as your matrix fills automatically"
-    },
-    {
-      icon: Shield,
-      title: "Secure Platform",
-      description: "Protected transactions and member data security"
-    },
-    {
-      icon: Zap,
-      title: "Instant Activation",
-      description: "Get started immediately with valid e-pin voucher"
-    },
-    {
-      icon: Award,
-      title: "Rewards Program",
-      description: "Earn incentives and bonuses for performance"
-    }
-  ];
-
-  const howItWorks = [
-    "Purchase R300 voucher with valid e-pin",
-    "Recruit 2 members to advance",
-    "Progress through 8 matrix levels",
-    "Earn commissions automatically"
-  ];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    const success = await login(username, password);
+    setIsLoading(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5">
-      {/* Simple Landing Page with Logo and Login/Register */}
-      <div className="container mx-auto px-4 py-16 text-center">
-        {/* Logo and Title */}
-        <div className="mb-12">
-          <img 
-            src={breadwinnersLogo} 
-            alt="Breadwinners Family Network" 
-            className="w-32 h-32 mx-auto mb-6 rounded-2xl shadow-lg"
-          />
-          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-2">Breadwinners</h1>
-          <h2 className="text-2xl md:text-3xl text-muted-foreground font-semibold">Family Network</h2>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <Card className="shadow-xl border-0 bg-white/95 backdrop-blur">
+          <CardHeader className="text-center pb-8 pt-8">
+            {/* Logo */}
+            <div className="flex justify-center mb-6">
+              <img 
+                src={breadwinnersLogo} 
+                alt="Breadwinners Family Network" 
+                className="w-24 h-24 rounded-2xl shadow-md"
+              />
+            </div>
+            
+            {/* Company Name */}
+            <div className="space-y-2">
+              <h1 className="text-2xl font-bold text-gray-800">Breadwinners</h1>
+              <h2 className="text-lg font-semibold text-green-600">Family Network</h2>
+            </div>
+            
+            {/* Section Title */}
+            <div className="pt-4">
+              <CardTitle className="text-xl font-semibold text-gray-800">Member Login</CardTitle>
+              <CardDescription className="text-gray-500 mt-1">
+                Login into Your Personal Back Office
+              </CardDescription>
+            </div>
+          </CardHeader>
 
-        {/* Login/Register Options */}
-        <div className="max-w-md mx-auto space-y-4">
-          <Button 
-            size="lg"
-            onClick={() => navigate('/login')}
-            variant="outline"
-            className="w-full py-4 text-lg font-semibold"
-          >
-            Login to Your Account
-          </Button>
-          
-          <Button 
-            size="lg"
-            onClick={() => navigate('/register')}
-            className="w-full py-4 text-lg font-semibold bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90"
-          >
-            Register New Account
-          </Button>
-        </div>
+          <CardContent className="pb-8">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Username Field */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="pl-10 h-12 border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+              </div>
 
-        {/* Simple Footer */}
-        <div className="mt-16 text-center">
-          <p className="text-muted-foreground text-sm">
-            © 2024 Breadwinners Family Network. Empowering South Africans financially.
+              {/* Password Field */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-blue-400 focus:ring-blue-400"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Sign In Button */}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+              >
+                {isLoading ? "Signing in..." : "Sign in"}
+                {!isLoading && (
+                  <svg className="ml-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                )}
+              </Button>
+            </form>
+
+            {/* Links */}
+            <div className="mt-6 space-y-4 text-center">
+              <Link 
+                to="/forgot-password" 
+                className="text-blue-500 hover:text-blue-700 text-sm font-medium block"
+              >
+                Forgot password?
+              </Link>
+              
+              <div className="text-sm text-gray-600">
+                Don't have account?{" "}
+                <Link 
+                  to="/register" 
+                  className="text-blue-500 hover:text-blue-700 font-medium"
+                >
+                  Sign Up
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <p className="text-xs text-gray-500">
+            © 2025 <span className="text-blue-600 font-medium">Breadwinners Family Network</span>. All right reserved
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            Empowering South Africans financially
           </p>
         </div>
       </div>
