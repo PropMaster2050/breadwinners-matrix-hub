@@ -8,13 +8,31 @@ export interface User {
   fullName: string;
   username: string;
   mobile: string;
+  email?: string;
+  physicalAddress?: string;
+  province?: string;
+  age?: number;
+  gender?: string;
   sponsorId?: string;
   level: number;
+  stage: number;
   earnings: number;
   directRecruits: number;
   totalRecruits: number;
   isActive: boolean;
   joinDate: string;
+  bankDetails?: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+    branchCode: string;
+  };
+  wallets: {
+    eWallet: number;
+    registrationWallet: number;
+    incentiveWallet: number;
+  };
+  transactionPin?: string;
 }
 
 interface AuthContextType {
@@ -30,7 +48,15 @@ interface RegisterData {
   fullName: string;
   username: string;
   password: string;
+  confirmPassword: string;
+  transactionPin: string;
+  confirmTransactionPin: string;
   mobile: string;
+  email?: string;
+  physicalAddress?: string;
+  province?: string;
+  age?: number;
+  gender?: string;
   sponsorId?: string;
   epin: string;
 }
@@ -63,11 +89,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username: 'admin',
           mobile: '+27123456789',
           level: 8,
+          stage: 5,
           earnings: 0,
           directRecruits: 0,
           totalRecruits: 0,
           isActive: true,
-          joinDate: new Date().toISOString()
+          joinDate: new Date().toISOString(),
+          wallets: {
+            eWallet: 0,
+            registrationWallet: 0,
+            incentiveWallet: 0
+          }
         };
         setUser(adminUser);
         localStorage.setItem('breadwinners_user', JSON.stringify(adminUser));
@@ -145,13 +177,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         username: userData.username,
         password: userData.password,
         mobile: userData.mobile,
+        email: userData.email,
+        physicalAddress: userData.physicalAddress,
+        province: userData.province,
+        age: userData.age,
+        gender: userData.gender,
         sponsorId: userData.sponsorId,
         level: 1,
+        stage: 1,
         earnings: 0,
         directRecruits: 0,
         totalRecruits: 0,
         isActive: true,
-        joinDate: new Date().toISOString()
+        joinDate: new Date().toISOString(),
+        transactionPin: userData.transactionPin,
+        wallets: {
+          eWallet: 0,
+          registrationWallet: 300, // R300 from voucher purchase
+          incentiveWallet: 0
+        }
       };
 
       // Save user

@@ -11,7 +11,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
-import breadwinnersLogo from "@/assets/breadwinners-logo.png";
+import { Logo } from "@/components/Logo";
 
 export function Header() {
   const { user, logout } = useAuth();
@@ -30,16 +30,7 @@ export function Header() {
       <div className="flex h-full items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
-          <div className="flex items-center gap-3">
-            <img 
-              src={breadwinnersLogo} 
-              alt="Breadwinners Family Network" 
-              className="w-10 h-10 rounded-lg"
-            />
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-bold text-foreground">Breadwinners Family Network</h1>
-            </div>
-          </div>
+          <Logo size="md" />
         </div>
 
         <div className="flex items-center gap-4">

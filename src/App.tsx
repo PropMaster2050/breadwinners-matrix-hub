@@ -9,18 +9,19 @@ import { AppLayout } from "@/components/layout/AppLayout";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
+import MultiStepRegistration from "./components/MultiStepRegistration";
 
 // User Pages
 import Index from "./pages/Index";
-import Dashboard from "./pages/dashboard/Dashboard";
+import NewDashboard from "./pages/dashboard/NewDashboard";
 import Profile from "./pages/user/Profile";
 import Network from "./pages/user/Network";
 import TeamReport from "./pages/user/TeamReport";
 import IncomeReport from "./pages/user/IncomeReport";
-import EWallet from "./pages/wallets/EWallet";
-import RegistrationWallet from "./pages/wallets/RegistrationWallet";
+import NewEWallet from "./pages/wallets/NewEWallet";
+import NewNetwork from "./pages/user/NewNetwork";
 import IncentiveWallet from "./pages/wallets/IncentiveWallet";
+import RegistrationWallet from "./pages/wallets/RegistrationWallet";
 import PayoutManagement from "./pages/user/PayoutManagement";
 import Notifications from "./pages/user/Notifications";
 
@@ -41,12 +42,12 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/register" element={<MultiStepRegistration />} />
 
             {/* Protected User Routes */}
             <Route path="/dashboard" element={
               <ProtectedRoute>
-                <AppLayout><Dashboard /></AppLayout>
+                <AppLayout><NewDashboard /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
@@ -56,7 +57,7 @@ const App = () => (
             } />
             <Route path="/network" element={
               <ProtectedRoute>
-                <AppLayout><Network /></AppLayout>
+                <AppLayout><NewNetwork /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/team-report" element={
@@ -71,7 +72,7 @@ const App = () => (
             } />
             <Route path="/e-wallet" element={
               <ProtectedRoute>
-                <AppLayout><EWallet /></AppLayout>
+                <AppLayout><NewEWallet /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/registration-wallet" element={

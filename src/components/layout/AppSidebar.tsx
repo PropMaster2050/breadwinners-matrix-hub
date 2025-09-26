@@ -23,7 +23,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import breadwinnersLogo from "@/assets/breadwinners-logo.png";
+import { Logo } from "@/components/Logo";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -49,19 +49,7 @@ export function AppSidebar() {
   return (
     <Sidebar className="border-r border-border bg-card">
       <SidebarHeader className="p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <img 
-            src={breadwinnersLogo} 
-            alt="Breadwinners Family Society" 
-            className="w-8 h-8 rounded-lg"
-          />
-          {!isCollapsed && (
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Breadwinners</h2>
-              <p className="text-xs text-muted-foreground">Family Society</p>
-            </div>
-          )}
-        </div>
+        <Logo showText={!isCollapsed} />
       </SidebarHeader>
 
       <SidebarContent>
