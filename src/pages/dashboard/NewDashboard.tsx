@@ -167,7 +167,7 @@ const NewDashboard = () => {
                 </div>
               </div>
               <div className="text-center">
-                <p className="text-4xl font-bold text-foreground mb-2">R {user.wallets.eWallet}</p>
+                <p className="text-4xl font-bold text-foreground mb-2">R {user.wallets?.eWallet || 0}</p>
                 <p className="text-sm text-muted-foreground mb-4">Available for Withdrawl Only</p>
               </div>
             </div>
