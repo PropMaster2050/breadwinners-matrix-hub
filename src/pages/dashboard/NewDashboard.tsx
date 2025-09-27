@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Logo } from "@/components/Logo";
 import { 
   Users, 
   TrendingUp, 
@@ -11,7 +12,10 @@ import {
   Clock,
   Award,
   Eye,
-  UserPlus
+  UserPlus,
+  Gift,
+  CreditCard,
+  Download
 } from "lucide-react";
 
 const NewDashboard = () => {
@@ -20,17 +24,20 @@ const NewDashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header with Logo and User Info */}
+        {/* Logo Header */}
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-2">Breadwinners Family Network</h1>
-          <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-2xl p-6 border border-primary/20">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-foreground mb-2">you made R{user.earnings.toFixed(2)} from your network</h2>
-            </div>
-          </div>
+          <Logo size="lg" className="justify-center mb-4" />
         </div>
+
+        {/* Welcome Section with User Name */}
+        <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+          <CardContent className="p-6 text-center">
+            <h2 className="text-xl font-bold text-foreground mb-2">Welcome, {user.fullName || user.username}!</h2>
+            <p className="text-lg text-foreground">You made R{user.earnings.toFixed(2)} from your network</p>
+          </CardContent>
+        </Card>
 
         {/* My Rank Section */}
         <Card className="bg-gradient-to-br from-accent/10 to-primary/10 border-primary/20">
@@ -147,42 +154,77 @@ const NewDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Wallet Section */}
+        {/* Wallets Section */}
         <Card className="bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-accent">
               <Wallet className="h-5 w-5" />
-              Wallet
+              My Wallets
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="bg-white rounded-lg p-6 border border-border/50">
-              <div className="flex items-center justify-between mb-4">
+          <CardContent className="space-y-4">
+            {/* E-Wallet */}
+            <div className="bg-white rounded-lg p-4 border border-border/50">
+              <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <Wallet className="h-8 w-8 text-foreground" />
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Wallet className="h-6 w-6 text-primary" />
+                  </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">AVAILABLE</p>
-                    <p className="font-semibold">Ewallet Balance</p>
+                    <h4 className="font-semibold text-foreground">E-Wallet</h4>
+                    <p className="text-sm text-muted-foreground">Available for withdrawal</p>
                   </div>
                 </div>
-              </div>
-              <div className="text-center">
-                <p className="text-4xl font-bold text-foreground mb-2">R {user.wallets?.eWallet || 0}</p>
-                <p className="text-sm text-muted-foreground mb-4">Available for Withdrawl Only</p>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-foreground">R {user.wallets?.eWallet || 0}</p>
+                  <Button size="sm" className="mt-2 bg-primary text-primary-foreground">
+                    Withdraw
+                  </Button>
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Available Balance Section */}
-        <Card className="bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20">
-          <CardContent className="p-6">
-            <Button 
-              className="w-full h-12 bg-gradient-to-r from-accent to-primary text-primary-foreground hover:opacity-90 font-semibold"
-              variant="outline"
-            >
-              available balance in your wallets
-            </Button>
+            {/* Registration Wallet */}
+            <div className="bg-white rounded-lg p-4 border border-border/50">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
+                    <CreditCard className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Registration Wallet</h4>
+                    <p className="text-sm text-muted-foreground">Track voucher purchases</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-foreground">R {user.wallets?.registrationWallet || 0}</p>
+                  <Button size="sm" variant="outline" className="mt-2">
+                    View History
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Incentive Wallet */}
+            <div className="bg-white rounded-lg p-4 border border-border/50">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center">
+                    <Gift className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Incentive Wallet</h4>
+                    <p className="text-sm text-muted-foreground">Samsung, Laptop, R5,000 vouchers</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-foreground">R {user.wallets?.incentiveWallet || 0}</p>
+                  <Button size="sm" className="mt-2 bg-gradient-to-r from-primary to-accent text-white">
+                    Claim Rewards
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -191,7 +233,7 @@ const NewDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-accent">
               <TrendingUp className="h-5 w-5" />
-              My Earning
+              My Earnings
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -203,7 +245,7 @@ const NewDashboard = () => {
                   </div>
                   <div>
                     <p className="text-3xl font-bold text-foreground">R {user.earnings.toFixed(2)}</p>
-                    <p className="text-sm text-muted-foreground">Level Commission</p>
+                    <p className="text-sm text-muted-foreground">Level Commission (R150 per person)</p>
                   </div>
                 </div>
               </div>
@@ -214,14 +256,57 @@ const NewDashboard = () => {
                     <Award className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-3xl font-bold text-foreground">R 0</p>
-                    <p className="text-sm text-muted-foreground">Incentive</p>
+                    <p className="text-3xl font-bold text-foreground">R {user.wallets?.incentiveWallet || 0}</p>
+                    <p className="text-sm text-muted-foreground">Incentive Rewards</p>
                   </div>
                 </div>
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Button 
+            className="h-16 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-semibold"
+            size="lg"
+          >
+            <div className="flex flex-col items-center gap-1">
+              <Eye className="h-5 w-5" />
+              <span className="text-sm">My Profile</span>
+            </div>
+          </Button>
+          
+          <Button 
+            className="h-16 bg-gradient-to-r from-accent to-primary text-primary-foreground hover:opacity-90 font-semibold"
+            size="lg"
+          >
+            <div className="flex flex-col items-center gap-1">
+              <Users className="h-5 w-5" />
+              <span className="text-sm">My Network</span>
+            </div>
+          </Button>
+          
+          <Button 
+            className="h-16 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-semibold"
+            size="lg"
+          >
+            <div className="flex flex-col items-center gap-1">
+              <TrendingUp className="h-5 w-5" />
+              <span className="text-sm">Income Report</span>
+            </div>
+          </Button>
+          
+          <Button 
+            className="h-16 bg-gradient-to-r from-accent to-primary text-primary-foreground hover:opacity-90 font-semibold"
+            size="lg"
+          >
+            <div className="flex flex-col items-center gap-1">
+              <Download className="h-5 w-5" />
+              <span className="text-sm">Payout Mgmt</span>
+            </div>
+          </Button>
+        </div>
       </div>
     </div>
   );
