@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { Eye, EyeOff, User, Lock } from "lucide-react";
 import breadwinnersLogo from "@/assets/breadwinners-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
-  const navigate = useNavigate();
+  
   const { login } = useAuth();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
