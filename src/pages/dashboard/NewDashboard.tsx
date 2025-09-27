@@ -24,7 +24,7 @@ const NewDashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Logo Header */}
         <div className="text-center">
@@ -32,7 +32,7 @@ const NewDashboard = () => {
         </div>
 
         {/* Welcome Section with User Name */}
-        <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+        <Card className="bg-gradient-to-r from-primary/15 to-accent/15 border-primary/30 shadow-lg">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-bold text-foreground mb-2">Welcome, {user.fullName || user.username}!</h2>
             <p className="text-lg text-foreground">You made R{user.earnings.toFixed(2)} from your network</p>
@@ -40,7 +40,7 @@ const NewDashboard = () => {
         </Card>
 
         {/* My Rank Section */}
-        <Card className="bg-gradient-to-br from-accent/10 to-primary/10 border-primary/20">
+        <Card className="bg-gradient-to-br from-primary/15 to-accent/15 border-primary/30 shadow-lg">
           <CardHeader className="text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Crown className="h-5 w-5 text-primary" />

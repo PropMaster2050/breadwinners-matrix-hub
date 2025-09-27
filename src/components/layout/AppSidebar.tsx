@@ -47,37 +47,42 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar className="border-r border-border bg-card">
-      <SidebarHeader className="p-4 border-b border-border">
-        <Logo showText={!isCollapsed} />
+    <Sidebar className="border-r-0 bg-gradient-to-b from-sidebar-background via-sidebar-accent to-sidebar-background">
+      <SidebarHeader className="p-6 border-b border-sidebar-border/20">
+        <Logo showText={!isCollapsed} className="text-sidebar-foreground" />
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="p-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground font-medium">
-            Main Menu
-          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="space-y-2">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
                     isActive={isActive(item.url)}
                     tooltip={isCollapsed ? item.title : undefined}
+                    className="w-full h-auto p-0 bg-transparent hover:bg-transparent"
                   >
                     <NavLink 
                       to={item.url}
                       className={({ isActive }) => 
-                        `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ${
                           isActive 
-                            ? "bg-primary text-primary-foreground font-medium" 
-                            : "text-foreground hover:bg-accent hover:text-accent-foreground"
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg transform scale-105" 
+                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:transform hover:scale-102"
                         }`
                       }
                     >
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
+                      <item.icon className="h-5 w-5 flex-shrink-0" />
+                      {!isCollapsed && <span className="font-medium">{item.title}</span>}
+                      {!isCollapsed && (
+                        <div className="ml-auto">
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
