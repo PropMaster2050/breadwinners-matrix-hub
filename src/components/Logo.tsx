@@ -1,4 +1,4 @@
-import breadwinnersLogo from "@/assets/breadwinners-logo.png";
+import breadwinnersLogo from "@/assets/breadwinners-handshake-logo.png";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";

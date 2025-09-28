@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 import { Eye, EyeOff, User, Lock } from "lucide-react";
-import breadwinnersLogo from "@/assets/breadwinners-logo.png";
+import breadwinnersLogo from "@/assets/breadwinners-handshake-logo.png";
 import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {

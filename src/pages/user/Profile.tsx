@@ -1,142 +1,177 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
-import { User, Calendar, Phone, Users, MapPin, Edit } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 
-const Profile = () => {
-  const { user } = useAuth();
+function Profile() {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: "John Doe",
+    email: "john@example.com",
+    phone: "+27123456789",
+    age: "",
+    gender: "",
+    address: "",
+    city: "",
+    province: "",
+    postalCode: ""
+  });
 
-  if (!user) return null;
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    toast({
+      title: "Profile Updated",
+      description: "Your profile details have been successfully updated.",
+    });
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-foreground">My Profile</h1>
-        <Button variant="outline">
-          <Edit className="h-4 w-4 mr-2" />
-          Edit Profile
-        </Button>
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">My Profile</h1>
+        <p className="text-muted-foreground">Manage your personal information and membership details</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Info */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" />
-                Personal Information
-              </CardTitle>
-              <CardDescription>Your account details and information</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
-                  <div className="text-lg font-semibold">{user.fullName}</div>
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Username</label>
-                  <div className="text-lg font-semibold">@{user.username}</div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Member ID</label>
-                  <div className="text-lg font-semibold font-mono">{user.memberId}</div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Mobile Number</label>
-                  <div className="text-lg font-semibold flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    {user.mobile}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Join Date</label>
-                  <div className="text-lg font-semibold flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {new Date(user.joinDate).toLocaleDateString()}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-muted-foreground">Account Status</label>
-                  <div>
-                    <Badge className={user.isActive ? "bg-green-500" : "bg-red-500"}>
-                      {user.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </div>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Personal Information</CardTitle>
+            <CardDescription>Update your basic personal details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                />
               </div>
-
-              {user.sponsorId && (
-                <div className="pt-4 border-t">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-muted-foreground">Sponsor</label>
-                    <div className="text-lg font-semibold flex items-center gap-2">
-                      <Users className="h-4 w-4" />
-                      {user.sponsorId}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Stats Sidebar */}
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account Statistics</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="text-2xl font-bold text-primary">{user.level}</div>
-                <div className="text-sm text-muted-foreground">Current Level</div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                />
               </div>
-
-              <div className="text-center p-4 rounded-lg bg-accent/10 border border-accent/20">
-                <div className="text-2xl font-bold text-accent">R{user.earnings.toFixed(2)}</div>
-                <div className="text-sm text-muted-foreground">Total Earnings</div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={formData.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                />
               </div>
-
-              <div className="text-center p-4 rounded-lg bg-green-50 border border-green-200">
-                <div className="text-2xl font-bold text-green-600">{user.directRecruits}</div>
-                <div className="text-sm text-muted-foreground">Direct Recruits</div>
+              <div>
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  type="number"
+                  placeholder="Enter your age"
+                  value={formData.age}
+                  onChange={(e) => handleInputChange("age", e.target.value)}
+                />
               </div>
+            </div>
 
-              <div className="text-center p-4 rounded-lg bg-blue-50 border border-blue-200">
-                <div className="text-2xl font-bold text-blue-600">{user.totalRecruits}</div>
-                <div className="text-sm text-muted-foreground">Total Network</div>
+            <div>
+              <Label htmlFor="gender">Gender</Label>
+              <Select value={formData.gender} onValueChange={(value) => handleInputChange("gender", value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Address Information</CardTitle>
+            <CardDescription>Update your residential address details</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="address">Street Address</Label>
+              <Textarea
+                id="address"
+                placeholder="Enter your full street address"
+                value={formData.address}
+                onChange={(e) => handleInputChange("address", e.target.value)}
+                rows={3}
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  placeholder="Enter your city"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange("city", e.target.value)}
+                />
               </div>
-            </CardContent>
-          </Card>
+              <div>
+                <Label htmlFor="province">Province</Label>
+                <Select value={formData.province} onValueChange={(value) => handleInputChange("province", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select province" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="gauteng">Gauteng</SelectItem>
+                    <SelectItem value="western-cape">Western Cape</SelectItem>
+                    <SelectItem value="kwazulu-natal">KwaZulu-Natal</SelectItem>
+                    <SelectItem value="eastern-cape">Eastern Cape</SelectItem>
+                    <SelectItem value="limpopo">Limpopo</SelectItem>
+                    <SelectItem value="mpumalanga">Mpumalanga</SelectItem>
+                    <SelectItem value="north-west">North West</SelectItem>
+                    <SelectItem value="northern-cape">Northern Cape</SelectItem>
+                    <SelectItem value="free-state">Free State</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Button className="w-full" variant="outline">
-                Change Password
-              </Button>
-              <Button className="w-full" variant="outline">
-                Update Contact Info
-              </Button>
-              <Button className="w-full" variant="outline">
-                Download Certificate
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+            <div>
+              <Label htmlFor="postalCode">Postal Code</Label>
+              <Input
+                id="postalCode"
+                placeholder="Enter postal code"
+                value={formData.postalCode}
+                onChange={(e) => handleInputChange("postalCode", e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="flex justify-end">
+        <Button onClick={handleSave} className="px-8">
+          Save Changes
+        </Button>
       </div>
     </div>
   );
-};
+}
 
 export default Profile;
