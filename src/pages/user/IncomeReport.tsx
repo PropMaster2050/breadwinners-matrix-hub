@@ -1,15 +1,18 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TrendingUp, Users, Award } from "lucide-react";
+import { useAuth } from '@/hooks/useAuth';
 
 const IncomeReport = () => {
-  // New user starts with R0 - income calculation: R150 per recruit (Stage 1), R100 per spillover (Stage 2+)
+  const { user } = useAuth();
+  
+  // Get actual user income data
   const incomeData = {
-    totalEarnings: 0,
-    stage1Recruits: 0, // R150 each
-    stage2Spillovers: 0, // R100 each
-    stage3Spillovers: 0, // R100 each
-    monthlyIncome: 0,
+    totalEarnings: user?.earnings || 0,
+    stage1Recruits: user?.directRecruits || 0,
+    stage2Spillovers: 0, // Will be calculated when spillover system is implemented
+    stage3Spillovers: 0, // Will be calculated when spillover system is implemented
+    monthlyIncome: 0, // Will be calculated based on current month's recruits
     lastMonthIncome: 0
   };
 

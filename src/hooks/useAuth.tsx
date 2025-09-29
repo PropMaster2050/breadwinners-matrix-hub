@@ -14,6 +14,8 @@ export interface User {
   age?: number;
   gender?: string;
   sponsorId?: string;
+  uplineId?: string;
+  uplineName?: string;
   level: number;
   stage: number;
   earnings: number;
@@ -33,6 +35,13 @@ export interface User {
     incentiveWallet: number;
   };
   transactionPin?: string;
+  downlines?: Array<{
+    memberId: string;
+    fullName: string;
+    joinDate: string;
+    level: number;
+    isActive: boolean;
+  }>;
 }
 
 interface AuthContextType {
@@ -169,10 +178,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
+      // Generate random member ID
+      const randomSuffix = Math.floor(Math.random() * 900000) + 100000; // 6-digit random number
+      const randomPrefix = Math.floor(Math.random() * 900) + 100; // 3-digit random number
+      
       // Create new user
       const newUser: User & { password: string } = {
         id: `user_${Date.now()}`,
-        memberId: `BW${String(storedUsers.length + 1).padStart(6, '0')}`,
+        memberId: `BW${randomPrefix}${randomSuffix}`,
         fullName: userData.fullName,
         username: userData.username,
         password: userData.password,
@@ -193,10 +206,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         transactionPin: userData.transactionPin,
         wallets: {
           eWallet: 0,
-          registrationWallet: 300, // R300 from voucher purchase
+          registrationWallet: 0, // Start with R0 as requested
           incentiveWallet: 0
-        }
+        },
+        downlines: []
       };
+
+      // Handle sponsor relationship
+      if (userData.sponsorId) {
+        const sponsor = storedUsers.find((u: any) => u.memberId === userData.sponsorId);
+        if (sponsor) {
+          // Add this user to sponsor's downlines
+          if (!sponsor.downlines) sponsor.downlines = [];
+          sponsor.downlines.push({
+            memberId: newUser.memberId,
+            fullName: newUser.fullName,
+            joinDate: newUser.joinDate,
+            level: 1,
+            isActive: true
+          });
+          
+          // Update sponsor's stats and earnings
+          sponsor.directRecruits += 1;
+          sponsor.totalRecruits += 1;
+          sponsor.earnings += 150; // R150 for Stage 1 recruit
+          sponsor.wallets.eWallet += 150;
+          
+          // Add upline info to new user
+          newUser.uplineId = sponsor.memberId;
+          newUser.uplineName = sponsor.fullName;
+        }
+      }
 
       // Save user
       storedUsers.push(newUser);
