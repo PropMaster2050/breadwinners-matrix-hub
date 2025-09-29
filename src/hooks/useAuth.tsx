@@ -212,6 +212,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const { password: _, ...userWithoutPassword } = newUser;
       setUser(userWithoutPassword);
       localStorage.setItem('breadwinners_user', JSON.stringify(userWithoutPassword));
+      
+      // Save credentials for easy future login
+      localStorage.setItem('rememberedCredentials', JSON.stringify({
+        username: userData.username,
+        password: userData.password
+      }));
 
       toast({ title: `Welcome to Breadwinners, ${userData.fullName}!` });
       navigate('/dashboard');
@@ -229,6 +235,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('breadwinners_user');
+    localStorage.removeItem('rememberedCredentials');
     toast({ title: "Logged out successfully" });
     navigate('/');
   };

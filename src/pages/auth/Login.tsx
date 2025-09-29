@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,16 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Load remembered credentials on component mount
+  useEffect(() => {
+    const rememberedCredentials = localStorage.getItem('rememberedCredentials');
+    if (rememberedCredentials) {
+      const { username: savedUsername, password: savedPassword } = JSON.parse(rememberedCredentials);
+      setUsername(savedUsername);
+      setPassword(savedPassword);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
