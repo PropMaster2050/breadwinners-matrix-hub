@@ -122,16 +122,6 @@ const Login = () => {
           </CardContent>
         </Card>
 
-        <div className="mt-6 p-4 rounded-lg bg-card/50 border border-border/50">
-          <p className="text-xs text-muted-foreground text-center mb-2">
-            <strong>Demo Credentials:</strong>
-          </p>
-          <div className="grid grid-cols-1 gap-2 text-xs">
-            <div className="bg-background/50 p-2 rounded">
-              <strong>Admin:</strong> admin / admin10
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
