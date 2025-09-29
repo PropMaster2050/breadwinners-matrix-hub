@@ -33,7 +33,7 @@ const Index = () => {
               <img 
                 src={breadwinnersLogo} 
                 alt="Breadwinners Family Network" 
-                className="w-24 h-24 rounded-2xl shadow-md"
+                className="w-28 h-28"
               />
             </div>
             

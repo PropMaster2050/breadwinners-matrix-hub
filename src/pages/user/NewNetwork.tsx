@@ -3,29 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Users, UserPlus, TrendingUp } from "lucide-react";
 
 function NewNetwork() {
-  // Mock data - replace with real data
+  // Mock data - new user starts with empty network
   const networkData = {
-    totalDownlines: 6,
-    activeMembers: 4,
-    pendingMembers: 2,
-    levels: [
-      {
-        level: 1,
-        members: [
-          { id: 1, name: "Sarah Johnson", status: "active", joined: "2024-01-15" },
-          { id: 2, name: "Mike Wilson", status: "active", joined: "2024-01-20" }
-        ]
-      },
-      {
-        level: 2,
-        members: [
-          { id: 3, name: "Emma Davis", status: "active", joined: "2024-02-01" },
-          { id: 4, name: "John Smith", status: "pending", joined: "2024-02-05" },
-          { id: 5, name: "Lisa Chen", status: "active", joined: "2024-02-10" },
-          { id: 6, name: "Tom Brown", status: "pending", joined: "2024-02-15" }
-        ]
-      }
-    ]
+    totalDownlines: 0,
+    activeMembers: 0,
+    pendingMembers: 0,
+    levels: []
   };
 
   const renderPyramidLevel = (level: any, levelNumber: number) => {

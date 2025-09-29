@@ -21,7 +21,7 @@ export default function PayoutManagement() {
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [transactionPin, setTransactionPin] = useState("");
 
-  const availableBalance = 450; // R450 from 3 recruits
+  const availableBalance = 0; // R0 for new user - R150 per recruit
   const minWithdrawal = 100;
 
   const withdrawalHistory = [
