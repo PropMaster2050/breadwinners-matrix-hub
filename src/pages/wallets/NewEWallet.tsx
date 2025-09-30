@@ -47,10 +47,10 @@ const NewEWallet = () => {
   const handleWithdrawal = () => {
     const amount = parseFloat(withdrawalAmount);
     
-    if (!amount || amount < 100) {
+    if (!amount || amount < 300) {
       toast({
         title: "Invalid Amount",
-        description: "Minimum withdrawal amount is R100",
+        description: "Minimum withdrawal amount is R300",
         variant: "destructive"
       });
       return;
@@ -147,7 +147,7 @@ const NewEWallet = () => {
               Withdraw Funds
             </CardTitle>
             <CardDescription>
-              Withdrawals are processed on Mondays and Fridays. Minimum amount: R100
+              Withdrawals are processed on Mondays and Fridays. Minimum amount: R300
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -156,10 +156,10 @@ const NewEWallet = () => {
               <Input
                 id="amount"
                 type="number"
-                placeholder="Enter amount (min R100)"
+                placeholder="Enter amount (min R300)"
                 value={withdrawalAmount}
                 onChange={(e) => setWithdrawalAmount(e.target.value)}
-                min="100"
+                min="300"
                 className="h-11"
               />
             </div>

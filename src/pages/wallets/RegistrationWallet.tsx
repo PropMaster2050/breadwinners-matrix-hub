@@ -10,7 +10,7 @@ const RegistrationWallet = () => {
     availableEpins: 0,
     purchasedEpins: 0,
     totalSpent: 0,
-    epinValue: 300, // R300 per e-pin
+    epinValue: 250, // R250 per e-pin
     transactions: []
   };
 
