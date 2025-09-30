@@ -21,9 +21,9 @@ const IncomeReport = () => {
       stage: 1,
       description: "Direct Recruits",
       recruits: incomeData.stage1Recruits,
-      ratePerMember: 150,
-      totalEarned: incomeData.stage1Recruits * 150,
-      status: incomeData.stage1Recruits >= 2 ? "completed" : "in-progress"
+      ratePerMember: 100,
+      totalEarned: incomeData.stage1Recruits * 100,
+      status: incomeData.stage1Recruits >= 6 ? "completed" : "in-progress"
     },
     {
       stage: 2,
@@ -31,7 +31,7 @@ const IncomeReport = () => {
       recruits: incomeData.stage2Spillovers,
       ratePerMember: 100,
       totalEarned: incomeData.stage2Spillovers * 100,
-      status: incomeData.stage2Spillovers >= 4 ? "completed" : "locked"
+      status: incomeData.stage2Spillovers >= 14 ? "completed" : "locked"
     },
     {
       stage: 3,
@@ -98,7 +98,7 @@ const IncomeReport = () => {
         <CardHeader>
           <CardTitle>Earnings by Stage</CardTitle>
           <CardDescription>
-            Stage 1: R150 per recruit | Stage 2+: R100 per spillover member
+            Stage 1: R100 per recruit | Stage 2+: R100 per spillover member
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -144,9 +144,9 @@ const IncomeReport = () => {
                   <div>
                     <p className="text-xs text-muted-foreground">Progress</p>
                     <p className="font-semibold">
-                      {stage.stage === 1 ? `${stage.recruits}/2` : 
-                       stage.stage === 2 ? `${stage.recruits}/4` : 
-                       `${stage.recruits}/8`}
+                      {stage.stage === 1 ? `${stage.recruits}/6` : 
+                       stage.stage === 2 ? `${stage.recruits}/14` : 
+                       `${stage.recruits}/14`}
                     </p>
                   </div>
                 </div>
@@ -159,7 +159,7 @@ const IncomeReport = () => {
               <TrendingUp className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Start Earning Today!</h3>
               <p className="text-muted-foreground">
-                Recruit your first 2 members to earn R150 each and unlock Stage 1 rewards.
+                Recruit your first 6 members to earn R100 each and complete Stage 1 (R600 total).
               </p>
             </div>
           )}

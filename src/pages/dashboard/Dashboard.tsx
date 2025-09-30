@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
+import { MembershipCard } from "@/components/MembershipCard";
 import { 
   Users, 
   TrendingUp, 
@@ -26,6 +27,11 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Membership Card */}
+      <div className="flex justify-center">
+        <MembershipCard user={user} />
+      </div>
+
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -60,7 +66,7 @@ const Dashboard = () => {
               R{user.earnings.toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              +R50 per level completion
+              R100 per recruit earned
             </p>
           </CardContent>
         </Card>
@@ -74,10 +80,10 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {user.directRecruits}/2
+              {user.directRecruits}/6
             </div>
             <p className="text-xs text-muted-foreground">
-              {nextLevelRecruits > 0 ? `${nextLevelRecruits} more needed` : 'Target reached!'}
+              {user.directRecruits < 6 ? `${6 - user.directRecruits} more for Stage 1` : 'Stage 1 Complete!'}
             </p>
           </CardContent>
         </Card>
@@ -251,7 +257,7 @@ const Dashboard = () => {
                 <UserPlus className="h-12 w-12 mx-auto mb-3 text-primary" />
                 <h3 className="font-semibold text-foreground mb-2">Ready to grow your network?</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Start recruiting your first 2 members to advance to the next level and earn R50!
+                  Start recruiting 6 members to complete Stage 1 and earn R600 (R100 x 6)!
                 </p>
                 <Button className="bg-gradient-to-r from-primary to-accent">
                   Start Recruiting

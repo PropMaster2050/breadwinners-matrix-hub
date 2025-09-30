@@ -229,8 +229,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // Update sponsor's stats and earnings
           sponsor.directRecruits += 1;
           sponsor.totalRecruits += 1;
-          sponsor.earnings += 150; // R150 for Stage 1 recruit
-          sponsor.wallets.eWallet += 150;
+          sponsor.earnings += 100; // R100 per recruit
+          sponsor.wallets.eWallet += 100;
           
           // Add upline info to new user
           newUser.uplineId = sponsor.memberId;

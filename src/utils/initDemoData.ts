@@ -6,7 +6,7 @@ export const initDemoData = () => {
     const demoEpins = [
       {
         code: 'DEMO123456',
-        value: 300,
+        value: 250,
         isUsed: false,
         usedBy: null,
         usedDate: null,
@@ -14,7 +14,7 @@ export const initDemoData = () => {
       },
       {
         code: 'TEST789012',
-        value: 300,
+        value: 250,
         isUsed: false,
         usedBy: null,
         usedDate: null,
@@ -22,7 +22,7 @@ export const initDemoData = () => {
       },
       {
         code: 'SAMPLE345678',
-        value: 300,
+        value: 250,
         isUsed: false,
         usedBy: null,
         usedDate: null,
