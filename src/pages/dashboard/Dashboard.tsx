@@ -27,9 +27,20 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Membership Card */}
-      <div className="flex justify-center">
+      {/* Membership Card at Top */}
+      <div className="flex justify-center mb-6">
         <MembershipCard user={user} />
+      </div>
+
+      {/* User Info Below Card */}
+      <div className="text-center mb-6">
+        <Badge variant="secondary" className="text-sm mb-2">
+          Username: {user.username}
+        </Badge>
+        <span className="mx-2">•</span>
+        <Badge variant="secondary" className="text-sm">
+          Member ID: {user.memberId}
+        </Badge>
       </div>
 
       {/* Welcome Header */}
@@ -43,11 +54,8 @@ const Dashboard = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Badge variant="secondary" className="text-sm">
-            Member ID: {user.memberId}
-          </Badge>
           <Badge className="text-sm bg-gradient-to-r from-primary to-accent">
-            Level {user.level}
+            Stage {user.stage} • Level {user.level}
           </Badge>
         </div>
       </div>

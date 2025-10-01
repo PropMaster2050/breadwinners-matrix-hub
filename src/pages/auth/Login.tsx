@@ -19,9 +19,13 @@ const Login = () => {
   useEffect(() => {
     const rememberedCredentials = localStorage.getItem('rememberedCredentials');
     if (rememberedCredentials) {
-      const { username: savedUsername, password: savedPassword } = JSON.parse(rememberedCredentials);
-      setUsername(savedUsername);
-      setPassword(savedPassword);
+      try {
+        const { username: savedUsername, password: savedPassword } = JSON.parse(rememberedCredentials);
+        setUsername(savedUsername || "");
+        setPassword(savedPassword || "");
+      } catch (error) {
+        console.error("Error loading saved credentials");
+      }
     }
   }, []);
 

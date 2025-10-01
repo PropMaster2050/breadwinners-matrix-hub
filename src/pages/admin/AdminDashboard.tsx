@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
-import { Settings, Users, CreditCard, MessageSquare, BarChart3, Download, Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Settings, Users, CreditCard, MessageSquare, BarChart3, Download, Plus, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 
@@ -20,6 +21,7 @@ interface EPin {
 
 const AdminDashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [epinQuantity, setEpinQuantity] = useState(10);
   const [generatedEPins, setGeneratedEPins] = useState<EPin[]>([]);
 
@@ -106,7 +108,13 @@ const AdminDashboard = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-        <Badge variant="destructive">Administrator</Badge>
+        <div className="flex gap-3 items-center">
+          <Button onClick={() => navigate('/admin/users')} variant="outline">
+            <UserCog className="h-4 w-4 mr-2" />
+            Manage Users
+          </Button>
+          <Badge variant="destructive">Administrator</Badge>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

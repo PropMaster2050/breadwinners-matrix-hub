@@ -27,6 +27,7 @@ import Notifications from "./pages/user/Notifications";
 
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -100,6 +101,11 @@ const App = () => (
             <Route path="/admin" element={
               <ProtectedRoute adminOnly>
                 <AppLayout><AdminDashboard /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/users" element={
+              <ProtectedRoute adminOnly>
+                <AppLayout><UserManagement /></AppLayout>
               </ProtectedRoute>
             } />
 
