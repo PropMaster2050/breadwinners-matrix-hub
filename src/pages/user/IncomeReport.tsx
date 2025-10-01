@@ -19,7 +19,7 @@ const IncomeReport = () => {
   const stageData = [
     {
       stage: 1,
-      description: "Direct Recruits",
+      description: "Direct Recruits (6 members)",
       recruits: incomeData.stage1Recruits,
       ratePerMember: 100,
       totalEarned: incomeData.stage1Recruits * 100,
@@ -27,18 +27,26 @@ const IncomeReport = () => {
     },
     {
       stage: 2,
-      description: "Spillover Members",
+      description: "Stage 2 Spillover (14 members who completed Stage 1)",
       recruits: incomeData.stage2Spillovers,
-      ratePerMember: 100,
-      totalEarned: incomeData.stage2Spillovers * 100,
+      ratePerMember: 200,
+      totalEarned: incomeData.stage2Spillovers * 200,
       status: incomeData.stage2Spillovers >= 14 ? "completed" : "locked"
     },
     {
       stage: 3,
-      description: "Level 3 Spillovers",
+      description: "Stage 3 Spillover (14 members who completed Stage 2)",
       recruits: incomeData.stage3Spillovers,
-      ratePerMember: 100,
-      totalEarned: incomeData.stage3Spillovers * 100,
+      ratePerMember: 300,
+      totalEarned: incomeData.stage3Spillovers * 300,
+      status: "locked"
+    },
+    {
+      stage: 4,
+      description: "Stage 4 Spillover (14 members who completed Stage 3)",
+      recruits: 0,
+      ratePerMember: 1000,
+      totalEarned: 0,
       status: "locked"
     }
   ];
@@ -98,7 +106,7 @@ const IncomeReport = () => {
         <CardHeader>
           <CardTitle>Earnings by Stage</CardTitle>
           <CardDescription>
-            Stage 1: R100 per recruit | Stage 2+: R100 per spillover member
+            Stage 1: R100 per recruit | Stage 2: R200 | Stage 3: R300 | Stage 4: R1000 per spillover
           </CardDescription>
         </CardHeader>
         <CardContent>

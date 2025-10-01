@@ -15,31 +15,40 @@ const IncentiveWallet = () => {
 
   const incentiveStructure = [
     {
+      stage: "Stage 1",
+      requirement: "Complete Stage 1 (6 direct recruits)",
+      reward: "R600 Cash Reward",
+      icon: Gift,
+      status: "locked",
+      progress: 0,
+      maxProgress: 6
+    },
+    {
       stage: "Stage 2",
-      requirement: "Complete 2×2 matrix (4 members)",
+      requirement: "14 members who completed Stage 1",
       reward: "Samsung Smartphone",
       icon: Smartphone,
       status: "locked",
       progress: 0,
-      maxProgress: 4
+      maxProgress: 14
     },
     {
       stage: "Stage 3", 
-      requirement: "Complete second 2×2 matrix (8 members total)",
-      reward: "Laptop Computer",
-      icon: Laptop,
-      status: "locked",
-      progress: 0,
-      maxProgress: 8
-    },
-    {
-      stage: "Stage 4",
-      requirement: "Complete third 2×2 matrix (16 members total)",
-      reward: "R5,000 Cash Voucher",
+      requirement: "14 members who completed Stage 2",
+      reward: "R20,000 Voucher or Cash Out",
       icon: Gift,
       status: "locked",
       progress: 0,
-      maxProgress: 16
+      maxProgress: 14
+    },
+    {
+      stage: "Stage 4",
+      requirement: "14 members who completed Stage 3",
+      reward: "R100,000 Voucher or Cash Out",
+      icon: Gift,
+      status: "locked",
+      progress: 0,
+      maxProgress: 14
     }
   ];
 
@@ -47,7 +56,12 @@ const IncentiveWallet = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Incentive Wallet</h1>
-        <p className="text-muted-foreground">Extra bonuses - Samsung, Laptop, Cash Vouchers per Stages</p>
+        <p className="text-muted-foreground">Extra bonuses - Cash rewards, Samsung smartphones, and premium vouchers</p>
+        <div className="mt-4 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+          <p className="text-sm text-muted-foreground">
+            <strong>How to purchase e-pins:</strong> Buy a R250 voucher at any retail store (Pep, Shoprite, Boxer, Game, Makro, Pick n Pay) and send the voucher code to Admin via WhatsApp. You'll receive an e-pin to register new accounts.
+          </p>
+        </div>
       </div>
 
       {/* Incentive Summary */}
@@ -193,9 +207,10 @@ const IncentiveWallet = () => {
                 Complete stages by recruiting members to unlock and claim amazing incentive rewards.
               </p>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>• Stage 2: Samsung Smartphone (4 members)</p>
-                <p>• Stage 3: Laptop Computer (8 members)</p>
-                <p>• Stage 4: R5,000 Cash Voucher (16 members)</p>
+                <p>• Stage 1: R600 Cash Reward (6 members)</p>
+                <p>• Stage 2: Samsung Smartphone (14 members)</p>
+                <p>• Stage 3: R20,000 Voucher/Cash (14 members)</p>
+                <p>• Stage 4: R100,000 Voucher/Cash (14 members)</p>
               </div>
             </div>
           )}

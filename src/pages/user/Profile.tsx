@@ -12,18 +12,29 @@ import { Lock } from "lucide-react";
 const Profile = () => {
   const { toast } = useToast();
   const { user } = useAuth();
-  const [isLocked, setIsLocked] = useState(false);
   
-  const [formData, setFormData] = useState({
-    fullName: user?.fullName || "",
-    email: user?.email || "",
-    phone: user?.mobile || "",
-    dateOfBirth: "",
-    gender: user?.gender || "",
-    address: user?.physicalAddress || "",
-    city: "",
-    province: user?.province || "",
-    postalCode: ""
+  // Load locked state from localStorage
+  const [isLocked, setIsLocked] = useState(() => {
+    const saved = localStorage.getItem(`profile_locked_${user?.memberId}`);
+    return saved === 'true';
+  });
+  
+  const [formData, setFormData] = useState(() => {
+    const savedData = localStorage.getItem(`profile_data_${user?.memberId}`);
+    if (savedData) {
+      return JSON.parse(savedData);
+    }
+    return {
+      fullName: user?.fullName || "",
+      email: user?.email || "",
+      phone: user?.mobile || "",
+      dateOfBirth: "",
+      gender: user?.gender || "",
+      address: user?.physicalAddress || "",
+      city: "",
+      province: user?.province || "",
+      postalCode: ""
+    };
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -35,10 +46,13 @@ const Profile = () => {
   };
 
   const handleSave = () => {
+    // Save to localStorage permanently
+    localStorage.setItem(`profile_locked_${user?.memberId}`, 'true');
+    localStorage.setItem(`profile_data_${user?.memberId}`, JSON.stringify(formData));
     setIsLocked(true);
     toast({
       title: "Profile Locked",
-      description: "Your profile information has been permanently saved and locked.",
+      description: "Your profile information has been permanently saved and locked. You cannot edit it again.",
     });
   };
 

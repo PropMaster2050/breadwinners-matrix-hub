@@ -7,27 +7,42 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 import { Banknote, CreditCard, Calendar, AlertTriangle } from "lucide-react";
 
 export default function PayoutManagement() {
   const { toast } = useToast();
-  const [bankDetails, setBankDetails] = useState({
-    accountName: "",
-    accountNumber: "",
-    bankName: "",
-    branchCode: "",
-    accountType: ""
+  const { user } = useAuth();
+  
+  // Load bank details from localStorage
+  const [bankDetails, setBankDetails] = useState(() => {
+    const saved = localStorage.getItem(`bank_details_${user?.memberId}`);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return {
+      accountName: "",
+      accountNumber: "",
+      bankName: "",
+      branchCode: "",
+      accountType: ""
+    };
   });
+  
   const [withdrawalAmount, setWithdrawalAmount] = useState("");
   const [transactionPin, setTransactionPin] = useState("");
 
-  const availableBalance = 0; // R0 for new user - R150 per recruit
-  const minWithdrawal = 100;
+  const availableBalance = user?.wallets?.eWallet || 0; // Use actual wallet balance
+  const minWithdrawal = 300;
 
-  const withdrawalHistory = [
-    { id: 1, amount: 300, status: "completed", date: "2024-02-23", reference: "WD001" },
-    { id: 2, amount: 150, status: "pending", date: "2024-02-26", reference: "WD002" },
-  ];
+  // Load withdrawal history from localStorage
+  const [withdrawalHistory, setWithdrawalHistory] = useState<any[]>(() => {
+    const saved = localStorage.getItem(`withdrawal_history_${user?.memberId}`);
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return [];
+  });
 
   const isWithdrawalDay = () => {
     const today = new Date().getDay();
@@ -35,9 +50,11 @@ export default function PayoutManagement() {
   };
 
   const handleBankDetailsUpdate = () => {
+    // Save bank details to localStorage
+    localStorage.setItem(`bank_details_${user?.memberId}`, JSON.stringify(bankDetails));
     toast({
-      title: "Bank Details Updated",
-      description: "Your bank details have been successfully updated.",
+      title: "Bank Details Saved",
+      description: "Your bank details have been permanently saved.",
     });
   };
 
@@ -80,6 +97,19 @@ export default function PayoutManagement() {
       return;
     }
 
+    // Add to withdrawal history
+    const newWithdrawal = {
+      id: Date.now(),
+      amount: amount,
+      status: "pending",
+      date: new Date().toISOString().split('T')[0],
+      reference: `WD${Date.now().toString().slice(-6)}`
+    };
+    
+    const updatedHistory = [newWithdrawal, ...withdrawalHistory];
+    setWithdrawalHistory(updatedHistory);
+    localStorage.setItem(`withdrawal_history_${user?.memberId}`, JSON.stringify(updatedHistory));
+    
     toast({
       title: "Withdrawal Submitted",
       description: `Your withdrawal of R${amount} has been submitted for processing.`,
@@ -127,7 +157,7 @@ export default function PayoutManagement() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-primary mb-2">
-                  R{availableBalance.toLocaleString()}
+                  R{availableBalance.toFixed(2)}
                 </div>
                 <p className="text-sm text-muted-foreground">
                   Minimum withdrawal: R{minWithdrawal}
@@ -304,24 +334,27 @@ export default function PayoutManagement() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {withdrawalHistory.map((withdrawal) => (
-                  <div key={withdrawal.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <div className="font-semibold">R{withdrawal.amount}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {withdrawal.date} • Ref: {withdrawal.reference}
+                {withdrawalHistory.length > 0 ? (
+                  withdrawalHistory.map((withdrawal) => (
+                    <div key={withdrawal.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="font-semibold">R{withdrawal.amount.toFixed(2)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {withdrawal.date} • Ref: {withdrawal.reference}
+                        </div>
+                      </div>
+                      <div>
+                        {getStatusBadge(withdrawal.status)}
                       </div>
                     </div>
-                    <div>
-                      {getStatusBadge(withdrawal.status)}
-                    </div>
-                  </div>
-                ))}
-                
-                {withdrawalHistory.length === 0 && (
+                  ))
+                ) : (
                   <div className="text-center py-8">
                     <Banknote className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                     <p className="text-muted-foreground">No withdrawal history yet</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Your withdrawal requests will appear here
+                    </p>
                   </div>
                 )}
               </div>

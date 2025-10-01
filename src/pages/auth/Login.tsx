@@ -30,7 +30,11 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      await login(username, password);
+      const success = await login(username, password);
+      if (success) {
+        // Save credentials to localStorage for next time
+        localStorage.setItem('rememberedCredentials', JSON.stringify({ username, password }));
+      }
     } finally {
       setIsLoading(false);
     }
