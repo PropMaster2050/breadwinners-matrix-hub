@@ -141,7 +141,7 @@ const MultiStepRegistration = () => {
               ) : (
                 <>
                   <CreditCard className="h-4 w-4" />
-                  Enter your R300 voucher code
+                  Enter your R250 voucher code
                 </>
               )}
             </CardDescription>
@@ -392,14 +392,14 @@ const MultiStepRegistration = () => {
                       id="epin"
                       name="epin"
                       type="text"
-                      placeholder="Enter your R300 voucher code"
+                      placeholder="Enter your R250 voucher code"
                       value={formData.epin}
                       onChange={handleInputChange}
                       required
                       className="h-11 font-mono text-center text-lg"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Enter the voucher code you purchased for R300
+                      Enter the voucher code you purchased for R250 at retail stores (Pep, Shoprite, Boxer, Game, Makro, Pick n Pay)
                     </p>
                   </div>
 

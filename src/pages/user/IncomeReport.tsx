@@ -9,45 +9,74 @@ const IncomeReport = () => {
   // Get actual user income data
   const incomeData = {
     totalEarnings: user?.earnings || 0,
-    stage1Recruits: user?.directRecruits || 0,
-    stage2Spillovers: 0, // Will be calculated when spillover system is implemented
-    stage3Spillovers: 0, // Will be calculated when spillover system is implemented
-    monthlyIncome: 0, // Will be calculated based on current month's recruits
-    lastMonthIncome: 0
+    directRecruits: user?.directRecruits || 0,
+    spillovers: user?.totalRecruits || 0,
+    monthlyIncome: 0
   };
+
+  // Calculate actual matrix progression
+  const calculateStageProgress = () => {
+    // Stage 1: 6 members (2 direct + 4 from their recruits)
+    const stage1Progress = Math.min(incomeData.directRecruits >= 2 ? 6 : incomeData.directRecruits, 6);
+    const stage1Complete = stage1Progress >= 6;
+    
+    // Stage 2: 14 downlines who each completed Stage 1 = 14 x 6 = 84 members
+    const stage2Progress = stage1Complete ? Math.min(incomeData.spillovers, 84) : 0;
+    const stage2Complete = stage2Progress >= 84;
+    
+    // Stage 3: 168 indirect downlines
+    const stage3Progress = stage2Complete ? Math.min(incomeData.spillovers - 84, 168) : 0;
+    const stage3Complete = stage3Progress >= 168;
+    
+    // Stage 4: 336 indirect downlines
+    const stage4Progress = stage3Complete ? Math.min(incomeData.spillovers - 252, 336) : 0;
+    
+    return {
+      stage1: { members: stage1Progress, complete: stage1Complete, required: 6 },
+      stage2: { members: stage2Progress, complete: stage2Complete, required: 84 },
+      stage3: { members: stage3Progress, complete: stage3Complete, required: 168 },
+      stage4: { members: stage4Progress, complete: false, required: 336 }
+    };
+  };
+
+  const progress = calculateStageProgress();
 
   const stageData = [
     {
       stage: 1,
-      description: "Direct Recruits (6 members)",
-      recruits: incomeData.stage1Recruits,
-      ratePerMember: 100,
-      totalEarned: incomeData.stage1Recruits * 100,
-      status: incomeData.stage1Recruits >= 6 ? "completed" : "in-progress"
+      description: "2 Direct Members (each with 2)",
+      members: progress.stage1.members,
+      rate: 100,
+      earned: progress.stage1.members * 100,
+      status: progress.stage1.complete ? "complete" : "active",
+      required: progress.stage1.required
     },
     {
       stage: 2,
-      description: "Stage 2 Spillover (14 members who completed Stage 1)",
-      recruits: incomeData.stage2Spillovers,
-      ratePerMember: 200,
-      totalEarned: incomeData.stage2Spillovers * 200,
-      status: incomeData.stage2Spillovers >= 14 ? "completed" : "locked"
+      description: "14 Downlines × Stage 1 (6 each) = 84 members",
+      members: progress.stage2.members,
+      rate: 100,
+      earned: progress.stage2.members * 100,
+      status: progress.stage1.complete ? (progress.stage2.complete ? "complete" : "active") : "locked",
+      required: progress.stage2.required
     },
     {
       stage: 3,
-      description: "Stage 3 Spillover (14 members who completed Stage 2)",
-      recruits: incomeData.stage3Spillovers,
-      ratePerMember: 300,
-      totalEarned: incomeData.stage3Spillovers * 300,
-      status: "locked"
+      description: "168 indirect downlines",
+      members: progress.stage3.members,
+      rate: 100,
+      earned: progress.stage3.members * 100,
+      status: progress.stage2.complete ? (progress.stage3.complete ? "complete" : "active") : "locked",
+      required: progress.stage3.required
     },
     {
       stage: 4,
-      description: "Stage 4 Spillover (14 members who completed Stage 3)",
-      recruits: 0,
-      ratePerMember: 1000,
-      totalEarned: 0,
-      status: "locked"
+      description: "336 indirect downlines",
+      members: progress.stage4.members,
+      rate: 100,
+      earned: progress.stage4.members * 100,
+      status: progress.stage3.complete ? "active" : "locked",
+      required: progress.stage4.required
     }
   ];
 
@@ -55,7 +84,7 @@ const IncomeReport = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">My Income Report</h1>
-        <p className="text-muted-foreground">Track your voucher rewards earned per stage</p>
+        <p className="text-muted-foreground">Track your earnings per stage with R100 spillover per member</p>
       </div>
 
       {/* Income Summary */}
@@ -81,8 +110,7 @@ const IncomeReport = () => {
           <CardContent>
             <div className="text-2xl font-bold">R{incomeData.monthlyIncome.toLocaleString()}</div>
             <p className="text-xs text-muted-foreground">
-              {incomeData.monthlyIncome >= incomeData.lastMonthIncome ? "+" : ""}
-              {incomeData.monthlyIncome - incomeData.lastMonthIncome} from last month
+              Current month income
             </p>
           </CardContent>
         </Card>
@@ -93,7 +121,7 @@ const IncomeReport = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{incomeData.stage1Recruits + incomeData.stage2Spillovers + incomeData.stage3Spillovers}</div>
+            <div className="text-2xl font-bold">{incomeData.directRecruits + incomeData.spillovers}</div>
             <p className="text-xs text-muted-foreground">
               Across all stages
             </p>
@@ -106,7 +134,7 @@ const IncomeReport = () => {
         <CardHeader>
           <CardTitle>Earnings by Stage</CardTitle>
           <CardDescription>
-            Stage 1: R100 per recruit | Stage 2: R200 | Stage 3: R300 | Stage 4: R1000 per spillover
+            R100 spillover per member for all stages
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -125,37 +153,33 @@ const IncomeReport = () => {
                   </div>
                   <Badge 
                     variant={
-                      stage.status === "completed" ? "default" : 
-                      stage.status === "in-progress" ? "secondary" : 
+                      stage.status === "complete" ? "default" : 
+                      stage.status === "active" ? "secondary" : 
                       "outline"
                     }
                   >
-                    {stage.status === "completed" ? "Completed" : 
-                     stage.status === "in-progress" ? "In Progress" : 
+                    {stage.status === "complete" ? "Completed" : 
+                     stage.status === "active" ? "Active" : 
                      "Locked"}
                   </Badge>
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
                   <div>
-                    <p className="text-xs text-muted-foreground">Members</p>
-                    <p className="font-semibold">{stage.recruits}</p>
+                    <p className="text-xs text-muted-foreground">Progress</p>
+                    <p className="font-semibold">{stage.members} / {stage.required}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Rate</p>
-                    <p className="font-semibold">R{stage.ratePerMember}</p>
+                    <p className="text-xs text-muted-foreground">Spillover</p>
+                    <p className="font-semibold">R{stage.rate}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Earned</p>
-                    <p className="font-semibold">R{stage.totalEarned.toLocaleString()}</p>
+                    <p className="font-semibold">R{stage.earned.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Progress</p>
-                    <p className="font-semibold">
-                      {stage.stage === 1 ? `${stage.recruits}/6` : 
-                       stage.stage === 2 ? `${stage.recruits}/14` : 
-                       `${stage.recruits}/14`}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Status</p>
+                    <p className="font-semibold capitalize">{stage.status}</p>
                   </div>
                 </div>
               </div>
@@ -167,7 +191,7 @@ const IncomeReport = () => {
               <TrendingUp className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Start Earning Today!</h3>
               <p className="text-muted-foreground">
-                Recruit your first 6 members to earn R100 each and complete Stage 1 (R600 total).
+                Recruit 2 direct members (who each recruit 2) to earn R100 per member and complete Stage 1 (R600 total).
               </p>
             </div>
           )}

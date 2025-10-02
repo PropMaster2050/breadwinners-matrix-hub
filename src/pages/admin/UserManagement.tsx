@@ -105,7 +105,7 @@ const UserManagement = () => {
                   <TableHead>Stage</TableHead>
                   <TableHead>E-Wallet</TableHead>
                   <TableHead>Earnings</TableHead>
-                  <TableHead>Bank Account</TableHead>
+                  <TableHead>Bank Accounts</TableHead>
                   <TableHead>Withdrawals</TableHead>
                 </TableRow>
               </TableHeader>
@@ -130,19 +130,26 @@ const UserManagement = () => {
                       <TableCell>R{(userData.wallets?.eWallet || 0).toFixed(2)}</TableCell>
                       <TableCell>R{userData.earnings.toFixed(2)}</TableCell>
                       <TableCell>
-                        {bankDetails ? (
-                          <div className="text-xs">
-                            <div className="font-medium">{bankDetails.bankName}</div>
-                            <div className="text-muted-foreground">
-                              {bankDetails.accountNumber}
-                            </div>
-                            <div className="text-muted-foreground">
-                              {bankDetails.accountHolder}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">Not provided</span>
-                        )}
+                        {(() => {
+                          const bankAccounts = localStorage.getItem(`bankAccounts_${userData.memberId}`);
+                          const accounts = bankAccounts ? JSON.parse(bankAccounts) : [];
+                          
+                          if (accounts.length > 0) {
+                            return (
+                              <div className="space-y-2">
+                                {accounts.map((acc: any, idx: number) => (
+                                  <div key={idx} className="text-xs border-b pb-2 last:border-0">
+                                    <div className="font-medium">{acc.bankName}</div>
+                                    <div className="text-muted-foreground">{acc.accountNumber}</div>
+                                    <div className="text-muted-foreground">{acc.accountHolder}</div>
+                                    {acc.isLocked && <Badge variant="secondary" className="mt-1">Locked</Badge>}
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return <span className="text-muted-foreground">Not provided</span>;
+                        })()}
                       </TableCell>
                       <TableCell>
                         <div className="text-xs">
