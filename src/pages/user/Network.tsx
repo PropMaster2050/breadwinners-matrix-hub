@@ -90,15 +90,68 @@ const Network = () => {
         </Card>
       </div>
 
+      {/* Stage Tree Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <TreePine className="h-5 w-5 text-primary" />
+            Network Stages
+          </CardTitle>
+          <CardDescription>
+            View detailed tree structure for each stage
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => window.location.href = '/network/stage/1'}
+            >
+              <TreePine className="h-6 w-6 mb-2 text-primary" />
+              <span className="font-semibold">Stage 1 Tree</span>
+              <span className="text-xs text-muted-foreground">2x2 Matrix</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => window.location.href = '/network/stage/2'}
+            >
+              <TreePine className="h-6 w-6 mb-2 text-primary" />
+              <span className="font-semibold">Stage 2 Tree</span>
+              <span className="text-xs text-muted-foreground">14x6 Matrix</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => window.location.href = '/network/stage/3'}
+            >
+              <TreePine className="h-6 w-6 mb-2 text-primary" />
+              <span className="font-semibold">Stage 3 Tree</span>
+              <span className="text-xs text-muted-foreground">168 Members</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col items-center justify-center"
+              onClick={() => window.location.href = '/network/stage/4'}
+            >
+              <TreePine className="h-6 w-6 mb-2 text-primary" />
+              <span className="font-semibold">Stage 4 Tree</span>
+              <span className="text-xs text-muted-foreground">336 Members</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Matrix Visualization */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <NetworkIcon className="h-5 w-5 text-primary" />
-            2x2 Matrix Structure
+            2x2 Matrix Structure (Stage 1 Preview)
           </CardTitle>
           <CardDescription>
-            Your current position and network structure
+            Your current position and direct network structure
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -28,6 +28,8 @@ import Notifications from "./pages/user/Notifications";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
+import AdminPayouts from "./pages/admin/AdminPayouts";
+import StageTree from "./pages/user/StageTree";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -97,6 +99,13 @@ const App = () => (
               </ProtectedRoute>
             } />
 
+            {/* Network Stage Trees */}
+            <Route path="/network/stage/:stage" element={
+              <ProtectedRoute>
+                <AppLayout><StageTree /></AppLayout>
+              </ProtectedRoute>
+            } />
+
             {/* Protected Admin Routes */}
             <Route path="/admin" element={
               <ProtectedRoute adminOnly>
@@ -106,6 +115,11 @@ const App = () => (
             <Route path="/admin/users" element={
               <ProtectedRoute adminOnly>
                 <AppLayout><UserManagement /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/payouts" element={
+              <ProtectedRoute adminOnly>
+                <AppLayout><AdminPayouts /></AppLayout>
               </ProtectedRoute>
             } />
 

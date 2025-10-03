@@ -71,10 +71,10 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              R{user.earnings.toFixed(2)}
+              R{((user.directRecruits + user.totalRecruits) * 100).toFixed(2)}
             </div>
             <p className="text-xs text-muted-foreground">
-              R100 per recruit earned
+              R100 per recruit
             </p>
           </CardContent>
         </Card>
@@ -155,12 +155,18 @@ const Dashboard = () => {
             
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="text-center p-3 rounded-lg bg-accent/10 border border-accent/20">
-                <div className="text-xl font-bold text-primary">R{(user.level * 50).toFixed(0)}</div>
-                <div className="text-xs text-muted-foreground">Earned So Far</div>
+                <div className="text-xl font-bold text-primary">R{((user.directRecruits + user.totalRecruits) * 100).toFixed(0)}</div>
+                <div className="text-xs text-muted-foreground">Total Earnings</div>
               </div>
               <div className="text-center p-3 rounded-lg bg-primary/10 border border-primary/20">
-                <div className="text-xl font-bold text-primary">R{((8 - user.level) * 50).toFixed(0)}</div>
-                <div className="text-xs text-muted-foreground">Potential Left</div>
+                <div className="text-xl font-bold text-primary">
+                  {(() => {
+                    const withdrawalHistory = JSON.parse(localStorage.getItem(`withdrawalHistory_${user.memberId}`) || '[]');
+                    const completedWithdrawals = withdrawalHistory.filter((w: any) => w.status === 'completed');
+                    return completedWithdrawals.length > 0 ? 'Completed' : (withdrawalHistory.some((w: any) => w.status === 'pending') ? 'Pending' : 'R0');
+                  })()}
+                </div>
+                <div className="text-xs text-muted-foreground">Payouts</div>
               </div>
             </div>
 

@@ -113,6 +113,10 @@ const AdminDashboard = () => {
             <UserCog className="h-4 w-4 mr-2" />
             Manage Users
           </Button>
+          <Button onClick={() => navigate('/admin/payouts')} variant="outline">
+            <Settings className="h-4 w-4 mr-2" />
+            Manage Payouts
+          </Button>
           <Badge variant="destructive">Administrator</Badge>
         </div>
       </div>

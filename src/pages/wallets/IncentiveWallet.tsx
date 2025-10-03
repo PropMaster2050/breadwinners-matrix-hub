@@ -2,8 +2,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Smartphone, Laptop, Gift, Users } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const IncentiveWallet = () => {
+  const { user } = useAuth();
+  
+  if (!user) return null;
+
   // New user starts with 0 incentives
   const incentiveData = {
     cellphones: 0,
@@ -14,31 +19,10 @@ const IncentiveWallet = () => {
   };
 
   // Calculate actual matrix progression for incentives
-  const calculateIncentiveProgress = (directRecruits: number, totalRecruits: number) => {
-    // Stage 1: 6 members (2 direct + 4 from their recruits)
-    const stage1Progress = Math.min(directRecruits >= 2 ? 6 : directRecruits, 6);
-    const stage1Complete = stage1Progress >= 6;
-    
-    // Stage 2: 14 downlines who each completed Stage 1 (14 x 6 = 84)
-    const stage2Progress = stage1Complete ? Math.min(totalRecruits, 84) : 0;
-    const stage2Complete = stage2Progress >= 84;
-    
-    // Stage 3: 168 indirect downlines
-    const stage3Progress = stage2Complete ? Math.min(totalRecruits - 84, 168) : 0;
-    const stage3Complete = stage3Progress >= 168;
-    
-    // Stage 4: 336 indirect downlines
-    const stage4Progress = stage3Complete ? Math.min(totalRecruits - 252, 336) : 0;
-    
-    return {
-      stage1: { progress: stage1Progress, complete: stage1Complete, max: 6 },
-      stage2: { progress: stage2Progress, complete: stage2Complete, max: 84 },
-      stage3: { progress: stage3Progress, complete: stage3Complete, max: 168 },
-      stage4: { progress: stage4Progress, complete: false, max: 336 }
-    };
-  };
-
-  const progress = calculateIncentiveProgress(0, 0); // Will use actual user data
+  const stage1Complete = user.directRecruits >= 2 && user.totalRecruits >= 6;
+  const stage2Complete = user.totalRecruits >= 84;
+  const stage3Complete = user.totalRecruits >= 168;
+  const stage4Complete = user.totalRecruits >= 336;
 
   const incentiveStructure = [
     {
@@ -46,36 +30,36 @@ const IncentiveWallet = () => {
       requirement: "6 members (2 direct + 4 indirect)",
       reward: "R600 Cash Reward",
       icon: Gift,
-      status: progress.stage1.complete ? "unlocked" : "locked",
-      current: progress.stage1.progress,
-      max: progress.stage1.max
+      status: stage1Complete ? "unlocked" : "locked",
+      current: user.totalRecruits >= 6 ? 6 : user.totalRecruits,
+      max: 6
     },
     {
       stage: 2,
       requirement: "14 downlines × Stage 1 complete (84 members)",
       reward: "Samsung Smartphone",
       icon: Smartphone,
-      status: progress.stage2.complete ? "unlocked" : "locked",
-      current: progress.stage2.progress,
-      max: progress.stage2.max
+      status: stage2Complete ? "unlocked" : "locked",
+      current: stage1Complete ? Math.min(user.totalRecruits, 84) : 0,
+      max: 84
     },
     {
       stage: 3,
       requirement: "168 indirect members",
       reward: "R20,000 Voucher or Cash",
       icon: Gift,
-      status: progress.stage3.complete ? "unlocked" : "locked",
-      current: progress.stage3.progress,
-      max: progress.stage3.max
+      status: stage3Complete ? "unlocked" : "locked",
+      current: stage2Complete ? Math.min(user.totalRecruits, 168) : 0,
+      max: 168
     },
     {
       stage: 4,
       requirement: "336 indirect members",
       reward: "R100,000 Voucher or Cash",
       icon: Gift,
-      status: progress.stage4.complete ? "unlocked" : "locked",
-      current: progress.stage4.progress,
-      max: progress.stage4.max
+      status: stage4Complete ? "unlocked" : "locked",
+      current: stage3Complete ? Math.min(user.totalRecruits, 336) : 0,
+      max: 336
     }
   ];
 

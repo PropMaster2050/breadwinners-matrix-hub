@@ -94,6 +94,16 @@ const MultiStepRegistration = () => {
     e.preventDefault();
     if (step !== 2 || !formData.epin) return;
     
+    // Check if username already exists
+    const existingUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+    const usernameExists = existingUsers.some((u: any) => u.username === formData.username);
+    
+    if (usernameExists) {
+      alert("Username already exists. Please try a different username.");
+      setStep(1); // Go back to step 1 to change username
+      return;
+    }
+    
     setIsLoading(true);
     
     try {

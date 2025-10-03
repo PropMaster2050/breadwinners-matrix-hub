@@ -48,7 +48,7 @@ const IncomeReport = () => {
       members: progress.stage1.members,
       rate: 100,
       earned: progress.stage1.members * 100,
-      status: progress.stage1.complete ? "complete" : "active",
+      status: progress.stage1.complete ? "Completed" : "In Progress...",
       required: progress.stage1.required
     },
     {
@@ -57,7 +57,7 @@ const IncomeReport = () => {
       members: progress.stage2.members,
       rate: 100,
       earned: progress.stage2.members * 100,
-      status: progress.stage1.complete ? (progress.stage2.complete ? "complete" : "active") : "locked",
+      status: progress.stage1.complete ? (progress.stage2.complete ? "Completed" : "In Progress...") : "Locked",
       required: progress.stage2.required
     },
     {
@@ -66,7 +66,7 @@ const IncomeReport = () => {
       members: progress.stage3.members,
       rate: 100,
       earned: progress.stage3.members * 100,
-      status: progress.stage2.complete ? (progress.stage3.complete ? "complete" : "active") : "locked",
+      status: progress.stage2.complete ? (progress.stage3.complete ? "Completed" : "In Progress...") : "Locked",
       required: progress.stage3.required
     },
     {
@@ -75,7 +75,7 @@ const IncomeReport = () => {
       members: progress.stage4.members,
       rate: 100,
       earned: progress.stage4.members * 100,
-      status: progress.stage3.complete ? "active" : "locked",
+      status: progress.stage3.complete ? (progress.stage4.members >= 336 ? "Completed" : "In Progress...") : "Locked",
       required: progress.stage4.required
     }
   ];
@@ -95,9 +95,9 @@ const IncomeReport = () => {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">R{incomeData.totalEarnings.toLocaleString()}</div>
+            <div className="text-2xl font-bold">R{(incomeData.directRecruits + incomeData.spillovers) * 100}</div>
             <p className="text-xs text-muted-foreground">
-              All time earnings
+              R100 per recruit
             </p>
           </CardContent>
         </Card>
@@ -153,14 +153,12 @@ const IncomeReport = () => {
                   </div>
                   <Badge 
                     variant={
-                      stage.status === "complete" ? "default" : 
-                      stage.status === "active" ? "secondary" : 
+                      stage.status === "Completed" ? "default" : 
+                      stage.status === "In Progress..." ? "secondary" : 
                       "outline"
                     }
                   >
-                    {stage.status === "complete" ? "Completed" : 
-                     stage.status === "active" ? "Active" : 
-                     "Locked"}
+                    {stage.status}
                   </Badge>
                 </div>
                 
