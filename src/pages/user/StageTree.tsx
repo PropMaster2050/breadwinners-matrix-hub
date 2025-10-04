@@ -56,9 +56,9 @@ const StageTree = () => {
   const getStageRequirement = (stageNum: number) => {
     switch(stageNum) {
       case 1: return "6 members (2 direct, each with 2)";
-      case 2: return "84 members (14 x Stage 1 complete)";
-      case 3: return "168 indirect downlines";
-      case 4: return "336 indirect downlines";
+      case 2: return "14 additional members under Stage 1";
+      case 3: return "14 additional members under Stage 2";
+      case 4: return "14 additional members under Stage 3";
       default: return "";
     }
   };
@@ -66,9 +66,9 @@ const StageTree = () => {
   const isStageComplete = (stageNum: number) => {
     switch(stageNum) {
       case 1: return user.directRecruits >= 2 && user.totalRecruits >= 6;
-      case 2: return user.totalRecruits >= 84;
-      case 3: return user.totalRecruits >= 168;
-      case 4: return user.totalRecruits >= 336;
+      case 2: return user.totalRecruits >= 20; // 6 from Stage 1 + 14 new
+      case 3: return user.totalRecruits >= 34; // 20 from Stage 2 + 14 new
+      case 4: return user.totalRecruits >= 48; // 34 from Stage 3 + 14 new
       default: return false;
     }
   };
@@ -97,7 +97,10 @@ const StageTree = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            {stageNumber === 1 ? "2x2" : stageNumber === 2 ? "14x6" : stageNumber === 3 ? "168" : "336"} Matrix Structure
+            {stageNumber === 1 ? "Stage 1: 2x2 Matrix (6 Members)" : 
+             stageNumber === 2 ? "Stage 2: +14 Members" : 
+             stageNumber === 3 ? "Stage 3: +14 Members" : 
+             "Stage 4: +14 Members"}
           </CardTitle>
           <CardDescription>
             Your Stage {stageNumber} network structure

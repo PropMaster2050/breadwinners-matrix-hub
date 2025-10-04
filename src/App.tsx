@@ -23,6 +23,7 @@ import NewNetwork from "./pages/user/NewNetwork";
 import IncentiveWallet from "./pages/wallets/IncentiveWallet";
 import RegistrationWallet from "./pages/wallets/RegistrationWallet";
 import PayoutManagement from "./pages/user/PayoutManagement";
+import MyPayouts from "./pages/user/MyPayouts";
 import Notifications from "./pages/user/Notifications";
 
 // Admin Pages
@@ -91,6 +92,11 @@ const App = () => (
             <Route path="/payout-management" element={
               <ProtectedRoute>
                 <AppLayout><PayoutManagement /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/my-payouts" element={
+              <ProtectedRoute>
+                <AppLayout><MyPayouts /></AppLayout>
               </ProtectedRoute>
             } />
             <Route path="/notifications" element={

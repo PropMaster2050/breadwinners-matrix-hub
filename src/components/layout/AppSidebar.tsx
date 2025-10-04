@@ -8,7 +8,8 @@ import {
   CreditCard, 
   Gift, 
   DollarSign, 
-  Bell 
+  Bell,
+  BadgeDollarSign
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -35,6 +36,7 @@ const menuItems = [
   { title: "Registration Wallet", url: "/registration-wallet", icon: CreditCard },
   { title: "Incentive Wallet", url: "/incentive-wallet", icon: Gift },
   { title: "Payout Management", url: "/payout-management", icon: DollarSign },
+  { title: "My Payouts", url: "/my-payouts", icon: BadgeDollarSign },
   { title: "Notifications", url: "/notifications", icon: Bell },
 ];
 

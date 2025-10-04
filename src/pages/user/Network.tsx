@@ -95,7 +95,7 @@ const Network = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <TreePine className="h-5 w-5 text-primary" />
-            Network Stages
+            Network Market
           </CardTitle>
           <CardDescription>
             View detailed tree structure for each stage

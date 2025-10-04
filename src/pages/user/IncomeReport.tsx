@@ -84,7 +84,7 @@ const IncomeReport = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">My Income Report</h1>
-        <p className="text-muted-foreground">Track your earnings per stage with R100 spillover per member</p>
+        <p className="text-muted-foreground">Track your earnings per stage with R100 per member</p>
       </div>
 
       {/* Income Summary */}
@@ -134,7 +134,7 @@ const IncomeReport = () => {
         <CardHeader>
           <CardTitle>Earnings by Stage</CardTitle>
           <CardDescription>
-            R100 spillover per member for all stages
+            R100 per member for all stages
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -162,14 +162,10 @@ const IncomeReport = () => {
                   </Badge>
                 </div>
                 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Progress</p>
                     <p className="font-semibold">{stage.members} / {stage.required}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Spillover</p>
-                    <p className="font-semibold">R{stage.rate}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Earned</p>
