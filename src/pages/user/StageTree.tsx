@@ -26,28 +26,51 @@ const StageTree = () => {
   // Render recursive tree structure
   const renderTreeNode = (member: any, level: number = 0) => {
     return (
-      <div key={member.id} className="flex flex-col items-center">
-        <div className="text-center mb-4">
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center font-bold mb-2 ${
-            member.recruits >= (stageNumber === 1 ? 6 : stageNumber === 2 ? 84 : stageNumber === 3 ? 168 : 336)
-              ? 'bg-green-100 border-2 border-green-500 text-green-800' 
-              : 'bg-blue-100 border-2 border-blue-500 text-blue-800'
-          }`}>
-            {member.name.split(' ').map((n: string) => n[0]).join('')}
+      <div key={member.id} className="relative flex flex-col items-center">
+        {/* Connecting line from parent (only if not root level) */}
+        {level > 0 && (
+          <div className="absolute -top-8 left-1/2 w-0.5 h-8 bg-[hsl(45,100%,50%)]" style={{ transform: 'translateX(-50%)' }}></div>
+        )}
+        
+        {/* Member Node */}
+        <div className="relative bg-white border-4 border-[hsl(45,100%,50%)] rounded-lg p-4 w-40 text-center shadow-md">
+          {/* Logo/Icon at top */}
+          <div className="mb-2 flex justify-center">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[hsl(200,100%,50%)] to-[hsl(180,100%,55%)] flex items-center justify-center">
+              <Users className="h-5 w-5 text-white" />
+            </div>
           </div>
-          <div className="text-xs">
-            <div className="font-medium">{member.name}</div>
-            <div className="text-muted-foreground">{member.memberId}</div>
-            <Badge variant="secondary" className="mt-1 text-xs">
-              {member.recruits} recruits
-            </Badge>
-          </div>
+          
+          {/* Stage Label */}
+          <div className="text-xs font-bold text-foreground mb-1">STAGE {stageNumber}</div>
+          
+          {/* Member ID */}
+          <div className="text-xs font-semibold text-foreground mb-1">{member.memberId}</div>
+          
+          {/* Member Name */}
+          <div className="text-xs text-muted-foreground">{member.name}</div>
         </div>
 
+        {/* Horizontal connecting line for children */}
         {member.downlines && member.downlines.length > 0 && (
-          <div className="flex gap-8 mt-4">
-            {member.downlines.map((downline: any) => renderTreeNode(downline, level + 1))}
-          </div>
+          <>
+            <div className="w-0.5 h-8 bg-[hsl(45,100%,50%)]"></div>
+            <div className="relative flex gap-12 mt-0">
+              {/* Horizontal line connecting siblings */}
+              {member.downlines.length > 1 && (
+                <div 
+                  className="absolute top-0 h-0.5 bg-[hsl(45,100%,50%)]" 
+                  style={{ 
+                    left: '50%',
+                    right: '50%',
+                    width: `${(member.downlines.length - 1) * 12}rem`,
+                    transform: 'translateX(-50%)'
+                  }}
+                ></div>
+              )}
+              {member.downlines.map((downline: any) => renderTreeNode(downline, level + 1))}
+            </div>
+          </>
         )}
       </div>
     );
@@ -109,12 +132,15 @@ const StageTree = () => {
         <CardContent>
           <div className="flex flex-col items-center space-y-6 p-6 overflow-x-auto">
             {/* Your Position */}
-            <div className="text-center">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-white font-bold mb-2">
-                YOU
+            <div className="relative bg-gradient-to-br from-[hsl(220,100%,35%)] to-[hsl(200,100%,50%)] border-4 border-[hsl(45,100%,50%)] rounded-lg p-6 w-48 text-center shadow-lg">
+              <div className="mb-3 flex justify-center">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-white" />
+                </div>
               </div>
-              <div className="text-sm font-medium">{user.fullName}</div>
-              <Badge className="text-xs mt-1">Stage {stageNumber}</Badge>
+              <div className="text-sm font-bold text-white mb-1">STAGE {stageNumber}</div>
+              <div className="text-sm font-semibold text-white mb-1">{user.memberId}</div>
+              <div className="text-sm text-white/80">{user.fullName}</div>
             </div>
 
             {/* Network Tree */}
@@ -134,13 +160,21 @@ const StageTree = () => {
 
             {/* Empty Slots Indicator for Stage 1 (2x2) */}
             {stageNumber === 1 && networkData.length < 2 && (
-              <div className="flex gap-8">
+              <div className="flex gap-12">
                 {[...Array(2 - networkData.length)].map((_, index) => (
-                  <div key={index} className="text-center">
-                    <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 text-gray-500 flex items-center justify-center font-bold mb-2">
-                      {networkData.length + index + 1}
+                  <div key={index} className="relative">
+                    {index === 0 && networkData.length === 0 && (
+                      <div className="absolute -top-8 left-1/2 w-0.5 h-8 bg-[hsl(45,100%,50%)]" style={{ transform: 'translateX(-50%)' }}></div>
+                    )}
+                    <div className="bg-gray-50 border-4 border-dashed border-gray-300 rounded-lg p-4 w-40 text-center">
+                      <div className="mb-2 flex justify-center">
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <Users className="h-5 w-5 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-gray-400 mb-1">STAGE {stageNumber}</div>
+                      <div className="text-xs text-gray-400">Empty Slot</div>
                     </div>
-                    <div className="text-xs text-muted-foreground">Empty Slot</div>
                   </div>
                 ))}
               </div>

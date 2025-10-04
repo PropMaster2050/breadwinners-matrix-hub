@@ -31,11 +31,70 @@ const NewDashboard = () => {
           <Logo size="lg" className="justify-center mb-4" />
         </div>
 
-        {/* Welcome Section with User Name */}
-        <Card className="bg-gradient-to-r from-primary/15 to-accent/15 border-primary/30 shadow-lg">
-          <CardContent className="p-6 text-center">
-            <h2 className="text-xl font-bold text-foreground mb-2">Welcome, {user.fullName || user.username}!</h2>
-            <p className="text-lg text-foreground">You made R{user.earnings.toFixed(2)} from your network</p>
+        {/* User Info Cards - Blue Theme */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* E-Wallet Balance Card */}
+          <Card className="bg-gradient-to-br from-[hsl(220,100%,35%)] to-[hsl(210,100%,45%)] border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Wallet className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white/80 text-sm font-medium">E-Wallet Balance</p>
+                  <p className="text-xs text-white/60">Available for Withdrawal</p>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">R {user.wallets?.eWallet || 0}</p>
+            </CardContent>
+          </Card>
+
+          {/* Registration Wallet Card */}
+          <Card className="bg-gradient-to-br from-[hsl(210,100%,50%)] to-[hsl(200,100%,55%)] border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                  <CreditCard className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white/80 text-sm font-medium">Registration Wallet</p>
+                  <p className="text-xs text-white/60">Use for Signing Up New Members</p>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">R {user.wallets?.registrationWallet || 0}</p>
+            </CardContent>
+          </Card>
+
+          {/* Incentive Wallet Card */}
+          <Card className="bg-gradient-to-br from-[hsl(200,100%,50%)] to-[hsl(190,100%,55%)] border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-lg bg-white/20 flex items-center justify-center">
+                  <Gift className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-white/80 text-sm font-medium">Incentive Wallet</p>
+                  <p className="text-xs text-white/60">Non Cash Incentive Claim Withdrawl</p>
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-white">R {user.wallets?.incentiveWallet || 0}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* User Info Banner */}
+        <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20">
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-center sm:text-left">
+                <h2 className="text-xl font-bold text-foreground">{user.fullName || user.username}</h2>
+                <p className="text-sm text-muted-foreground">Member ID: {user.memberId}</p>
+              </div>
+              <div className="text-center sm:text-right">
+                <p className="text-sm text-muted-foreground">Total Earnings</p>
+                <p className="text-2xl font-bold text-primary">R{user.earnings.toFixed(2)}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
