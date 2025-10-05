@@ -234,6 +234,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_to_wallet: {
+        Args: { _amount: number; _user_id: string; _wallet_type: string }
+        Returns: boolean
+      }
+      deduct_from_wallet: {
+        Args: { _amount: number; _user_id: string; _wallet_type: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

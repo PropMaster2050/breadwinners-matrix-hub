@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,35 +10,17 @@ import breadwinnersLogo from "@/assets/breadwinners-logo.png";
 
 const Login = () => {
   const { login } = useAuth();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Load remembered credentials on component mount
-  useEffect(() => {
-    const rememberedCredentials = localStorage.getItem('rememberedCredentials');
-    if (rememberedCredentials) {
-      try {
-        const { username: savedUsername, password: savedPassword } = JSON.parse(rememberedCredentials);
-        setUsername(savedUsername || "");
-        setPassword(savedPassword || "");
-      } catch (error) {
-        console.error("Error loading saved credentials");
-      }
-    }
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const success = await login(username, password);
-      if (success) {
-        // Save credentials to localStorage for next time
-        localStorage.setItem('rememberedCredentials', JSON.stringify({ username, password }));
-      }
+      await login(email, password);
     } finally {
       setIsLoading(false);
     }
@@ -72,13 +54,13 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   className="h-12"
                 />
@@ -105,6 +87,14 @@ const Login = () => {
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
+                </div>
+                <div className="text-right">
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-sm text-primary hover:text-primary/80 transition-colors"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
               </div>
 

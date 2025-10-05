@@ -13,7 +13,6 @@ interface RegistrationEmailRequest {
   email: string;
   fullName: string;
   username: string;
-  password: string;
   memberId: string;
 }
 
@@ -23,7 +22,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { email, fullName, username, password, memberId }: RegistrationEmailRequest = await req.json();
+    const { email, fullName, username, memberId }: RegistrationEmailRequest = await req.json();
 
     const emailResponse = await resend.emails.send({
       from: "Breadwinners Family Society <onboarding@resend.dev>",
@@ -57,7 +56,7 @@ const handler = async (req: Request): Promise<Response> => {
               <p>Congratulations! Your registration with Breadwinners Family Society has been successfully completed.</p>
               
               <div class="credentials">
-                <h3 style="margin-top: 0; color: #0052a3;">Your Login Credentials</h3>
+                <h3 style="margin-top: 0; color: #0052a3;">Your Account Information</h3>
                 <div class="credential-item">
                   <span class="credential-label">Member ID:</span> ${memberId}
                 </div>
@@ -65,13 +64,13 @@ const handler = async (req: Request): Promise<Response> => {
                   <span class="credential-label">Username:</span> ${username}
                 </div>
                 <div class="credential-item">
-                  <span class="credential-label">Password:</span> ${password}
+                  <span class="credential-label">Email:</span> ${email}
                 </div>
               </div>
               
               <div class="warning">
-                <strong>⚠️ Important Security Notice:</strong><br>
-                Please keep these credentials safe and secure. We recommend changing your password after your first login for enhanced security.
+                <strong>⚠️ Important:</strong><br>
+                Please verify your email address by clicking the link in your confirmation email. If you didn't receive it, check your spam folder.
               </div>
               
               <p><strong>Next Steps:</strong></p>
