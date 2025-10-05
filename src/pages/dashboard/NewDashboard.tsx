@@ -24,8 +24,8 @@ const NewDashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 sm:p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 p-3 sm:p-4 md:p-6 transition-all duration-300">
+      <div className="max-w-4xl mx-auto space-y-4 md:space-y-6">
         {/* Logo Header */}
         <div className="text-center">
           <Logo size="lg" className="justify-center mb-4" />

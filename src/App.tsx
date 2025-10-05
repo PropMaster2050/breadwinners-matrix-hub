@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 
 // Auth Pages
 import Login from "./pages/auth/Login";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import MultiStepRegistration from "./components/MultiStepRegistration";
 
 // User Pages
@@ -46,6 +47,7 @@ const App = () => (
             {/* Public Routes */}
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/register" element={<MultiStepRegistration />} />
 
             {/* Protected User Routes */}

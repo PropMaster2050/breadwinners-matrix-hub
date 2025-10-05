@@ -69,7 +69,7 @@ export function AppSidebar() {
   const isNetworkActive = currentPath.startsWith("/network");
 
   return (
-    <Sidebar className="border-r-0 bg-gradient-to-b from-sidebar-background via-sidebar-accent to-sidebar-background">
+    <Sidebar className="border-r-0 bg-gradient-to-b from-sidebar-background via-sidebar-accent to-sidebar-background transition-all duration-300">
       <SidebarHeader className="p-6 border-b border-sidebar-border/20">
         <Logo showText={!isCollapsed} className="text-sidebar-foreground" />
       </SidebarHeader>

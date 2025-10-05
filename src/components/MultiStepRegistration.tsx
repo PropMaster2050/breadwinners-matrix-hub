@@ -120,8 +120,14 @@ const MultiStepRegistration = () => {
   const progress = (step / 2) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-accent/5 to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--sidebar-background))] via-[hsl(var(--sidebar-accent))] to-[hsl(var(--sidebar-border))] flex items-center justify-center p-4 relative overflow-hidden transition-all duration-300">
+      {/* Gold decorative lines */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-yellow-400/30 to-transparent transform -skew-x-12"></div>
+        <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-yellow-400/20 to-transparent transform skew-x-12"></div>
+      </div>
+      
+      <div className="w-full max-w-md relative z-10">
         {/* Logo Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 hover:opacity-80 transition-opacity">

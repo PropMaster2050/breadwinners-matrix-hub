@@ -248,6 +248,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       validEpin.usedDate = new Date().toISOString();
       localStorage.setItem('breadwinners_epins', JSON.stringify(storedEpins));
 
+      // Send registration confirmation email
+      try {
+        const response = await fetch('/functions/v1/send-registration-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: userData.email,
+            fullName: userData.fullName,
+            username: userData.username,
+            password: userData.password,
+            memberId: newUser.memberId
+          })
+        });
+      } catch (emailError) {
+        console.log('Email notification skipped');
+      }
+
+      // Send notification email to sponsor
+      if (userData.sponsorId) {
+        const sponsor = storedUsers.find((u: any) => u.memberId === userData.sponsorId);
+        if (sponsor?.email) {
+          try {
+            await fetch('/functions/v1/send-downline-notification', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sponsorEmail: sponsor.email,
+                sponsorName: sponsor.fullName,
+                newMemberName: userData.fullName,
+                newMemberId: newUser.memberId
+              })
+            });
+          } catch (emailError) {
+            console.log('Sponsor notification skipped');
+          }
+        }
+      }
+
       // Auto-login after registration
       const { password: _, ...userWithoutPassword } = newUser;
       setUser(userWithoutPassword);

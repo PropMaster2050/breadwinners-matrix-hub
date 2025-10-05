@@ -26,14 +26,16 @@ export function Header() {
   };
 
   return (
-    <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-full items-center justify-between px-4">
-        <div className="flex items-center gap-4">
+    <header className="h-14 md:h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300">
+      <div className="flex h-full items-center justify-between px-3 md:px-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <SidebarTrigger />
-          <Logo size="md" />
+          <div className="hidden sm:block">
+            <Logo size="md" />
+          </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           {user && (
             <>
               <div className="hidden sm:flex items-center gap-3">
@@ -50,7 +52,7 @@ export function Header() {
                 </div>
               </div>
 
-              <Button variant="ghost" size="icon" className="relative">
+              <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
                 <Bell className="h-4 w-4" />
                 <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-xs text-destructive-foreground flex items-center justify-center">
                   3
@@ -59,7 +61,7 @@ export function Header() {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button variant="ghost" className="relative h-9 w-9 md:h-10 md:w-10 rounded-full">
                     <Avatar className="h-8 w-8">
                       <AvatarFallback className="bg-primary text-primary-foreground">
                         {getInitials(user.fullName)}
