@@ -11,7 +11,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-background to-primary/5">
         <AppSidebar />
-        <SidebarInset>
+        <SidebarInset className="relative z-10">
           <Header />
           <main className="flex-1 p-6">
             {children}

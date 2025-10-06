@@ -60,13 +60,20 @@ const otherMenuItems = [
 ];
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
 
   const isActive = (path: string) => currentPath === path;
   const isCollapsed = state === "collapsed";
   const isNetworkActive = currentPath.startsWith("/network");
+
+  // Close mobile sidebar when clicking a link
+  const handleLinkClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
 
   return (
     <Sidebar className="border-r-0 bg-gradient-to-b from-sidebar-background via-sidebar-accent to-sidebar-background">
@@ -88,8 +95,9 @@ export function AppSidebar() {
                   >
                     <NavLink 
                       to={item.url}
+                      onClick={handleLinkClick}
                       className={({ isActive }) => 
-                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ${
+                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ease-in-out ${
                           isActive 
                             ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg transform scale-105" 
                             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:transform hover:scale-102"
@@ -141,8 +149,9 @@ export function AppSidebar() {
                             <SidebarMenuSubButton asChild>
                               <NavLink 
                                 to={stage.url}
+                                onClick={handleLinkClick}
                                 className={({ isActive }) => 
-                                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out ${
                                     isActive 
                                       ? "bg-sidebar-primary/80 text-sidebar-primary-foreground shadow-md" 
                                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
@@ -171,8 +180,9 @@ export function AppSidebar() {
                   >
                     <NavLink 
                       to={item.url}
+                      onClick={handleLinkClick}
                       className={({ isActive }) => 
-                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ${
+                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ease-in-out ${
                           isActive 
                             ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg transform scale-105" 
                             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:transform hover:scale-102"
