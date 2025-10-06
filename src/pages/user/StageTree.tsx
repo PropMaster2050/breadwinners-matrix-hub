@@ -160,7 +160,7 @@ const StageTree = () => {
 
             {/* Empty Slots Indicator for Stage 1 (2x2) */}
             {stageNumber === 1 && networkData.length < 2 && (
-              <div className="flex gap-6 md:gap-12 flex-wrap justify-center">
+              <div className="flex gap-12">
                 {[...Array(2 - networkData.length)].map((_, index) => (
                   <div key={index} className="relative">
                     {index === 0 && networkData.length === 0 && (

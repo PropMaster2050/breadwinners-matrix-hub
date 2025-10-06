@@ -116,24 +116,4 @@
   body {
     @apply bg-background text-foreground;
   }
-
-  /* Mobile-friendly smooth scrolling */
-  html {
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  /* Smooth transitions for all interactive elements */
-  button, a, input, select, textarea {
-    @apply transition-all duration-200;
-  }
-
-  /* Optimize touch targets for mobile */
-  @media (max-width: 768px) {
-    button, a {
-      min-height: 44px;
-      min-width: 44px;
-    }
-  }
 }

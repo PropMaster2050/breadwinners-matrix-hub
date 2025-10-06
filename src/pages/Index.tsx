@@ -24,16 +24,8 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--sidebar-background))] via-[hsl(var(--sidebar-accent))] to-[hsl(var(--sidebar-border))] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Gold decorative lines */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-yellow-400/30 to-transparent transform -skew-x-12"></div>
-        <div className="absolute top-0 right-1/3 w-px h-full bg-gradient-to-b from-transparent via-yellow-400/20 to-transparent transform skew-x-12"></div>
-        <div className="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-yellow-400/20 to-transparent"></div>
-        <div className="absolute bottom-1/4 left-0 w-full h-px bg-gradient-to-r from-transparent via-yellow-400/30 to-transparent"></div>
-      </div>
-      
-      <div className="w-full max-w-md relative z-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         <Card className="shadow-xl border-0 bg-white/95 backdrop-blur">
           <CardHeader className="text-center pb-8 pt-8">
             {/* Logo */}

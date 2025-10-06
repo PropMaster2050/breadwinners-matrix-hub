@@ -1,62 +1,73 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { User as SupabaseUser, Session } from '@supabase/supabase-js';
-
-export interface Profile {
-  id: string;
-  user_id: string;
-  username: string;
-  full_name: string;
-  email: string;
-  phone: string;
-  id_number: string;
-  own_referral_code: string;
-  referrer_code: string | null;
-  direct_recruits: number;
-  total_recruits: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Wallet {
-  id: string;
-  user_id: string;
-  e_wallet_balance: number;
-  registration_wallet_balance: number;
-  incentive_wallet_balance: number;
-  total_earned: number;
-  total_withdrawn: number;
-}
+import { toast } from '@/hooks/use-toast';
 
 export interface User {
   id: string;
-  profile: Profile;
-  wallet: Wallet;
-  isAdmin: boolean;
+  memberId: string;
+  fullName: string;
+  username: string;
+  mobile: string;
+  email?: string;
+  physicalAddress?: string;
+  province?: string;
+  age?: number;
+  gender?: string;
+  sponsorId?: string;
+  uplineId?: string;
+  uplineName?: string;
+  level: number;
+  stage: number;
+  earnings: number;
+  directRecruits: number;
+  totalRecruits: number;
+  isActive: boolean;
+  joinDate: string;
+  bankDetails?: {
+    bankName: string;
+    accountNumber: string;
+    accountHolder: string;
+    branchCode: string;
+  };
+  wallets: {
+    eWallet: number;
+    registrationWallet: number;
+    incentiveWallet: number;
+  };
+  transactionPin?: string;
+  downlines?: Array<{
+    memberId: string;
+    fullName: string;
+    joinDate: string;
+    level: number;
+    isActive: boolean;
+  }>;
 }
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (data: RegisterData) => Promise<void>;
+  login: (username: string, password: string) => Promise<boolean>;
+  register: (userData: RegisterData) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
 
 interface RegisterData {
-  email: string;
-  password: string;
-  username: string;
   fullName: string;
-  phone: string;
-  idNumber: string;
-  sponsor: string;
-  sponsorId: string;
-  ePin: string;
+  username: string;
+  password: string;
+  confirmPassword: string;
+  transactionPin: string;
+  confirmTransactionPin: string;
+  mobile: string;
+  email?: string;
+  physicalAddress?: string;
+  province?: string;
+  age?: number;
+  gender?: string;
+  sponsorId?: string;
+  epin: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -71,178 +82,216 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('breadwinners_user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
-  // Set up auth state listener and check for existing session
-  useEffect(() => {
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        setSession(currentSession);
-        
-        if (currentSession?.user) {
-          // Defer Supabase calls with setTimeout to prevent deadlock
-          setTimeout(async () => {
-            try {
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('user_id', currentSession.user.id)
-                .single();
-
-              if (profileError) throw profileError;
-
-              const { data: wallet, error: walletError } = await supabase
-                .from('wallets')
-                .select('*')
-                .eq('user_id', currentSession.user.id)
-                .single();
-
-              if (walletError) throw walletError;
-
-              const { data: roles } = await supabase
-                .from('user_roles')
-                .select('role')
-                .eq('user_id', currentSession.user.id);
-
-              const isAdmin = roles?.some(r => r.role === 'admin') || false;
-
-              setUser({
-                id: currentSession.user.id,
-                profile: profile as Profile,
-                wallet: wallet as Wallet,
-                isAdmin
-              });
-            } catch (error) {
-              console.error('Error fetching user data:', error);
-              setUser(null);
-            }
-          }, 0);
-        } else {
-          setUser(null);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      if (currentSession) {
-        setSession(currentSession);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Admin login
+      if (username === 'admin' && password === 'admin10') {
+        const adminUser: User = {
+          id: 'admin',
+          memberId: 'ADMIN001',
+          fullName: 'System Administrator',
+          username: 'admin',
+          mobile: '+27123456789',
+          level: 8,
+          stage: 5,
+          earnings: 0,
+          directRecruits: 0,
+          totalRecruits: 0,
+          isActive: true,
+          joinDate: new Date().toISOString(),
+          wallets: {
+            eWallet: 0,
+            registrationWallet: 0,
+            incentiveWallet: 0
+          }
+        };
+        setUser(adminUser);
+        localStorage.setItem('breadwinners_user', JSON.stringify(adminUser));
+        toast({ title: "Welcome back, Administrator!" });
+        navigate('/admin');
+        return true;
+      }
 
-      if (error) throw error;
+      // Regular user login - check against stored users
+      const storedUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+      const foundUser = storedUsers.find((u: any) => 
+        u.username === username && u.password === password
+      );
 
-      toast.success('Welcome back!');
-      
-      // Check if user is admin
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id);
-
-      if (roles?.some(r => r.role === 'admin')) {
-        navigate('/admin/dashboard');
-      } else {
+      if (foundUser) {
+        const { password: _, ...userWithoutPassword } = foundUser;
+        setUser(userWithoutPassword);
+        localStorage.setItem('breadwinners_user', JSON.stringify(userWithoutPassword));
+        toast({ title: `Welcome back, ${foundUser.fullName}!` });
         navigate('/dashboard');
+        return true;
       }
-    } catch (error: any) {
-      toast.error(error.message || 'Login failed');
-      throw error;
-    }
-  };
 
-  const register = async (data: RegisterData) => {
-    try {
-      // Generate referral code before signup
-      const referralCode = `BW${Date.now().toString().slice(-6)}`;
-
-      // Sign up with Supabase Auth
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/`,
-          data: {
-            username: data.username,
-            full_name: data.fullName,
-            phone: data.phone,
-            id_number: data.idNumber,
-            own_referral_code: referralCode,
-            referrer_code: data.sponsorId,
-            parent_id: null // Will be set based on referrer_code in trigger
-          }
-        }
+      toast({ 
+        title: "Login failed", 
+        description: "Invalid username or password",
+        variant: "destructive" 
       });
+      return false;
+    } catch (error) {
+      toast({ 
+        title: "Login error", 
+        description: "An error occurred during login",
+        variant: "destructive" 
+      });
+      return false;
+    }
+  };
 
-      if (signUpError) throw signUpError;
-      if (!authData.user) throw new Error('User creation failed');
+  const register = async (userData: RegisterData): Promise<boolean> => {
+    try {
+      // Validate e-pin
+      const storedEpins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
+      const validEpin = storedEpins.find((epin: any) => 
+        epin.code === userData.epin && !epin.isUsed
+      );
 
-      // Send registration confirmation email (without password)
-      try {
-        await supabase.functions.invoke('send-registration-email', {
-          body: {
-            email: data.email,
-            fullName: data.fullName,
-            username: data.username,
-            memberId: referralCode
-          }
+      if (!validEpin) {
+        toast({ 
+          title: "Registration failed", 
+          description: "Invalid or already used e-pin",
+          variant: "destructive" 
         });
-      } catch (emailError) {
-        console.error('Failed to send registration email:', emailError);
+        return false;
       }
 
-      // Send downline notification to sponsor
-      if (data.sponsorId) {
-        try {
-          await supabase.functions.invoke('send-downline-notification', {
-            body: {
-              sponsorId: data.sponsorId,
-              newMemberName: data.fullName,
-              newMemberId: referralCode
-            }
+      // Check if username already exists
+      const storedUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+      const existingUser = storedUsers.find((u: any) => u.username === userData.username);
+
+      if (existingUser) {
+        toast({ 
+          title: "Registration failed", 
+          description: "Username already exists",
+          variant: "destructive" 
+        });
+        return false;
+      }
+
+      // Generate random member ID
+      const randomSuffix = Math.floor(Math.random() * 900000) + 100000; // 6-digit random number
+      const randomPrefix = Math.floor(Math.random() * 900) + 100; // 3-digit random number
+      
+      // Create new user
+      const newUser: User & { password: string } = {
+        id: `user_${Date.now()}`,
+        memberId: `BW${randomPrefix}${randomSuffix}`,
+        fullName: userData.fullName,
+        username: userData.username,
+        password: userData.password,
+        mobile: userData.mobile,
+        email: userData.email,
+        physicalAddress: userData.physicalAddress,
+        province: userData.province,
+        age: userData.age,
+        gender: userData.gender,
+        sponsorId: userData.sponsorId,
+        level: 1,
+        stage: 1,
+        earnings: 0,
+        directRecruits: 0,
+        totalRecruits: 0,
+        isActive: true,
+        joinDate: new Date().toISOString(),
+        transactionPin: userData.transactionPin,
+        wallets: {
+          eWallet: 0,
+          registrationWallet: 0, // Start with R0 as requested
+          incentiveWallet: 0
+        },
+        downlines: []
+      };
+
+      // Handle sponsor relationship
+      if (userData.sponsorId) {
+        const sponsor = storedUsers.find((u: any) => u.memberId === userData.sponsorId);
+        if (sponsor) {
+          // Add this user to sponsor's downlines
+          if (!sponsor.downlines) sponsor.downlines = [];
+          sponsor.downlines.push({
+            memberId: newUser.memberId,
+            fullName: newUser.fullName,
+            joinDate: newUser.joinDate,
+            level: 1,
+            isActive: true
           });
-        } catch (emailError) {
-          console.error('Failed to send downline notification:', emailError);
+          
+          // Update sponsor's stats and earnings
+          sponsor.directRecruits += 1;
+          sponsor.totalRecruits += 1;
+          sponsor.earnings += 100; // R100 per recruit
+          sponsor.wallets.eWallet += 100;
+          
+          // Add upline info to new user
+          newUser.uplineId = sponsor.memberId;
+          newUser.uplineName = sponsor.fullName;
         }
       }
 
-      toast.success('Registration successful! Please check your email to confirm your account.');
-      navigate('/login');
-    } catch (error: any) {
-      toast.error(error.message || 'Registration failed');
-      throw error;
+      // Save user
+      storedUsers.push(newUser);
+      localStorage.setItem('breadwinners_users', JSON.stringify(storedUsers));
+
+      // Mark e-pin as used
+      validEpin.isUsed = true;
+      validEpin.usedBy = newUser.memberId;
+      validEpin.usedDate = new Date().toISOString();
+      localStorage.setItem('breadwinners_epins', JSON.stringify(storedEpins));
+
+      // Auto-login after registration
+      const { password: _, ...userWithoutPassword } = newUser;
+      setUser(userWithoutPassword);
+      localStorage.setItem('breadwinners_user', JSON.stringify(userWithoutPassword));
+      
+      // Save credentials for easy future login
+      localStorage.setItem('rememberedCredentials', JSON.stringify({
+        username: userData.username,
+        password: userData.password
+      }));
+
+      toast({ title: `Welcome to Breadwinners, ${userData.fullName}!` });
+      navigate('/dashboard');
+      return true;
+    } catch (error) {
+      toast({ 
+        title: "Registration error", 
+        description: "An error occurred during registration",
+        variant: "destructive" 
+      });
+      return false;
     }
   };
 
-  const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      navigate('/');
-      toast.info('Logged out successfully');
-    } catch (error: any) {
-      toast.error('Logout failed');
-    }
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('breadwinners_user');
+    localStorage.removeItem('rememberedCredentials');
+    toast({ title: "Logged out successfully" });
+    navigate('/');
   };
 
-  const isAuthenticated = !!session && !!user;
-  const isAdmin = user?.isAdmin || false;
+  const isAuthenticated = !!user;
+  const isAdmin = user?.username === 'admin';
 
   return (
-    <AuthContext.Provider value={{ user, session, login, register, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{
+      user,
+      login,
+      register,
+      logout,
+      isAuthenticated,
+      isAdmin
+    }}>
       {children}
     </AuthContext.Provider>
   );
