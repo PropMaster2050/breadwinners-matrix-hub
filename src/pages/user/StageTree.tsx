@@ -20,28 +20,25 @@ const StageTree = () => {
     if (!user.downlines || user.downlines.length === 0) return [];
     
     // Get all users from localStorage to build the tree
-    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
+    const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
     
     // For Stage 1: Build a 2-level tree (direct recruits + their recruits)
     if (stageNum === 1) {
       // Get user's direct recruits (level 1)
       const directRecruits = user.downlines.filter(d => d.level === 1);
       
-      console.log('Building Stage 1 tree for user:', user.memberId);
-      console.log('Direct recruits:', directRecruits);
-      console.log('All users in system:', allUsers);
       
       // Build tree with their downlines
       return directRecruits.map((directRecruit) => {
         // Find this recruit's full user data in allUsers
         const recruitUser = allUsers.find((u: any) => u.memberId === directRecruit.memberId);
         
-        console.log(`Looking for downlines of ${directRecruit.memberId}:`, recruitUser);
+        
         
         // Get this recruit's direct downlines (their level 1 = our level 2)
         const secondLevelRecruits = recruitUser?.downlines?.filter((d: any) => d.level === 1) || [];
         
-        console.log(`Second level recruits under ${directRecruit.memberId}:`, secondLevelRecruits);
+        
         
         return {
           id: directRecruit.memberId,
@@ -73,6 +70,14 @@ const StageTree = () => {
   };
 
   const networkData = getNetworkForStage(stageNumber);
+
+  // Stage 1 totals and earnings (2-level tree under you)
+  const stage1DirectCount = stageNumber === 1 ? networkData.length : 0;
+  const stage1IndirectCount = stageNumber === 1
+    ? networkData.reduce((sum: number, m: any) => sum + ((m.downlines?.length) || 0), 0)
+    : 0;
+  const stage1TotalMembers = stageNumber === 1 ? Math.min(6, stage1DirectCount + stage1IndirectCount) : 0;
+  const stage1Earnings = stageNumber === 1 ? stage1TotalMembers * 100 : 0;
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
@@ -237,9 +242,9 @@ const StageTree = () => {
     }
   };
 
-  const isLocked = isStageComplete(stageNumber);
-  const progress = getStageProgress(stageNumber);
-  const progressPercentage = (progress.current / progress.required) * 100;
+  const isLocked = stageNumber === 1 ? stage1TotalMembers === 6 : isStageComplete(stageNumber);
+  const progress = stageNumber === 1 ? { current: stage1TotalMembers, required: 6 } : getStageProgress(stageNumber);
+  const progressPercentage = progress.required > 0 ? (progress.current / progress.required) * 100 : 0;
 
   return (
     <div className="space-y-6 p-6">
@@ -259,6 +264,11 @@ const StageTree = () => {
         ) : (
           <Badge variant="secondary">
             {progress.current} / {progress.required} Members
+          </Badge>
+        )}
+        {stageNumber === 1 && (
+          <Badge variant="outline">
+            Earnings: R{stage1Earnings}
           </Badge>
         )}
       </div>
