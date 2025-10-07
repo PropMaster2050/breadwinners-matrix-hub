@@ -53,6 +53,36 @@ export type Database = {
         }
         Relationships: []
       }
+      epins: {
+        Row: {
+          code: string
+          created_at: string
+          generated_at: string
+          id: string
+          is_used: boolean
+          used_at: string | null
+          used_by_user_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          is_used?: boolean
+          used_at?: string | null
+          used_by_user_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          generated_at?: string
+          id?: string
+          is_used?: boolean
+          used_at?: string | null
+          used_by_user_id?: string | null
+        }
+        Relationships: []
+      }
       network_tree: {
         Row: {
           created_at: string
@@ -234,6 +264,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_to_wallet: {
+        Args: { _amount: number; _user_id: string; _wallet_type: string }
+        Returns: boolean
+      }
+      deduct_from_wallet: {
+        Args: { _amount: number; _user_id: string; _wallet_type: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Settings, Users, CreditCard, MessageSquare, BarChart3, Download, Plus, UserCog } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EPin {
   id: string;
@@ -37,40 +38,66 @@ const AdminDashboard = () => {
     return `BW${result}`;
   };
 
-  // Generate batch of e-pins
-  const handleGenerateEPins = () => {
-    const newEPins: EPin[] = [];
+  // Generate batch of e-pins and save to database
+  const handleGenerateEPins = async () => {
+    const newEPins = [];
     
     for (let i = 0; i < epinQuantity; i++) {
       newEPins.push({
-        id: Date.now().toString() + i,
         code: generateEPinCode(),
-        isUsed: false,
-        generatedAt: new Date().toISOString()
+        is_used: false,
+        generated_at: new Date().toISOString()
       });
     }
     
-    // Get existing e-pins from localStorage
-    const existingEPins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
-    const allEPins = [...existingEPins, ...newEPins];
-    
-    // Save to localStorage
-    localStorage.setItem('breadwinners_epins', JSON.stringify(allEPins));
-    setGeneratedEPins(allEPins);
-    
-    toast.success(`Successfully generated ${epinQuantity} e-pins`);
+    try {
+      const { data, error } = await supabase
+        .from('epins')
+        .insert(newEPins)
+        .select();
+      
+      if (error) throw error;
+      
+      toast.success(`Successfully generated ${epinQuantity} e-pins`);
+      loadEPins(); // Reload the list
+    } catch (error: any) {
+      toast.error(`Failed to generate e-pins: ${error.message}`);
+    }
+  };
+
+  // Load e-pins from database
+  const loadEPins = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('epins')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      const formattedEPins: EPin[] = (data || []).map(epin => ({
+        id: epin.id,
+        code: epin.code,
+        isUsed: epin.is_used,
+        usedBy: epin.used_by_user_id || undefined,
+        usedDate: epin.used_at || undefined,
+        generatedAt: epin.generated_at
+      }));
+      
+      setGeneratedEPins(formattedEPins);
+    } catch (error: any) {
+      toast.error(`Failed to load e-pins: ${error.message}`);
+    }
   };
 
   // Download e-pins as CSV
   const handleDownloadCSV = () => {
-    const epins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
-    
-    if (epins.length === 0) {
+    if (generatedEPins.length === 0) {
       toast.error('No e-pins available for download');
       return;
     }
 
-    const csvData = epins.map((epin: EPin) => ({
+    const csvData = generatedEPins.map((epin: EPin) => ({
       'E-Pin Code': epin.code,
       'Status': epin.isUsed ? 'Used' : 'Available',
       'Used By': epin.usedBy || 'N/A',
@@ -96,8 +123,7 @@ const AdminDashboard = () => {
 
   // Load e-pins on component mount
   useEffect(() => {
-    const epins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
-    setGeneratedEPins(epins);
+    loadEPins();
   }, []);
 
   const totalEPins = generatedEPins.length;

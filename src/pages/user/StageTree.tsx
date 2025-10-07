@@ -15,11 +15,19 @@ const StageTree = () => {
 
   const stageNumber = parseInt(stage || "1");
   
-  // Mock network data - in a real app, this would come from API based on stage
+  // Get network data from user's downlines
   const getNetworkForStage = (stageNum: number) => {
-    // For demonstration, showing different structures based on stage
-    const baseNetwork = JSON.parse(localStorage.getItem(`network_${user.memberId}_stage${stageNum}`) || '[]');
-    return baseNetwork;
+    if (!user.downlines || user.downlines.length === 0) return [];
+    
+    // Map downlines to the tree structure format
+    return user.downlines.map((downline) => ({
+      id: downline.memberId,
+      memberId: downline.memberId,
+      name: downline.fullName,
+      level: downline.level,
+      isActive: downline.isActive,
+      downlines: [] // For now, only show direct recruits in Stage 1
+    }));
   };
 
   const networkData = getNetworkForStage(stageNumber);
@@ -82,8 +90,12 @@ const StageTree = () => {
 
           {/* Avatar/Icon at top */}
           <div className="mb-2 flex justify-center">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center ring-2 ring-warning group-hover:ring-4 transition-all duration-300">
-              <Users className="h-6 w-6 text-primary-foreground" />
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center ring-2 ring-warning group-hover:ring-4 transition-all duration-300 ${
+              member.isActive 
+                ? 'bg-gradient-to-br from-primary to-accent' 
+                : 'bg-muted'
+            }`}>
+              <Users className={`h-6 w-6 ${member.isActive ? 'text-primary-foreground' : 'text-muted-foreground'}`} />
             </div>
           </div>
           

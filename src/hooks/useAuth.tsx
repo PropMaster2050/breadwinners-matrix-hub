@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface User {
   id: string;
@@ -150,16 +151,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (userData: RegisterData): Promise<boolean> => {
     try {
-      // Validate e-pin
-      const storedEpins = JSON.parse(localStorage.getItem('breadwinners_epins') || '[]');
-      const validEpin = storedEpins.find((epin: any) => 
-        epin.code === userData.epin && !epin.isUsed
-      );
+      // Validate e-pin from database
+      const { data: epinData, error: epinError } = await supabase
+        .from('epins')
+        .select('*')
+        .eq('code', userData.epin.toUpperCase())
+        .single();
 
-      if (!validEpin) {
+      if (epinError || !epinData) {
         toast({ 
           title: "Registration failed", 
-          description: "Invalid or already used e-pin",
+          description: "Invalid e-pin code. Please check and try again.",
+          variant: "destructive" 
+        });
+        return false;
+      }
+
+      if (epinData.is_used) {
+        toast({ 
+          title: "E-Pin Already Used", 
+          description: "This e-pin has already been used. Please contact support for assistance.",
           variant: "destructive" 
         });
         return false;
@@ -242,11 +253,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       storedUsers.push(newUser);
       localStorage.setItem('breadwinners_users', JSON.stringify(storedUsers));
 
-      // Mark e-pin as used
-      validEpin.isUsed = true;
-      validEpin.usedBy = newUser.memberId;
-      validEpin.usedDate = new Date().toISOString();
-      localStorage.setItem('breadwinners_epins', JSON.stringify(storedEpins));
+      // Mark e-pin as used in database
+      const { error: updateError } = await supabase
+        .from('epins')
+        .update({ 
+          is_used: true, 
+          used_at: new Date().toISOString()
+        })
+        .eq('id', epinData.id);
+
+      if (updateError) {
+        console.error('Failed to mark e-pin as used:', updateError);
+        // Continue with registration even if this fails
+      }
 
       // Auto-login after registration
       const { password: _, ...userWithoutPassword } = newUser;
