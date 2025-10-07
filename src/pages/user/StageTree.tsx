@@ -15,18 +15,50 @@ const StageTree = () => {
 
   const stageNumber = parseInt(stage || "1");
   
-  // Get network data from user's downlines
+  // Get network data from user's downlines - build 2-level tree for Stage 1
   const getNetworkForStage = (stageNum: number) => {
     if (!user.downlines || user.downlines.length === 0) return [];
     
-    // Map downlines to the tree structure format
+    // Get all users from localStorage to build the tree
+    const allUsers = JSON.parse(localStorage.getItem('users') || '[]');
+    
+    // For Stage 1: Build a 2-level tree (direct recruits + their recruits)
+    if (stageNum === 1) {
+      // Get user's direct recruits (level 1)
+      const directRecruits = user.downlines.filter(d => d.level === 1);
+      
+      // Build tree with their downlines
+      return directRecruits.map((directRecruit) => {
+        // Find this recruit's downlines in allUsers
+        const recruitUser = allUsers.find((u: any) => u.memberId === directRecruit.memberId);
+        const secondLevelRecruits = recruitUser?.downlines?.filter((d: any) => d.level === 1) || [];
+        
+        return {
+          id: directRecruit.memberId,
+          memberId: directRecruit.memberId,
+          name: directRecruit.fullName,
+          level: directRecruit.level,
+          isActive: directRecruit.isActive,
+          downlines: secondLevelRecruits.map((secondLevel: any) => ({
+            id: secondLevel.memberId,
+            memberId: secondLevel.memberId,
+            name: secondLevel.fullName,
+            level: 2, // Second level in YOUR tree
+            isActive: secondLevel.isActive,
+            downlines: []
+          }))
+        };
+      });
+    }
+    
+    // For other stages, use existing logic
     return user.downlines.map((downline) => ({
       id: downline.memberId,
       memberId: downline.memberId,
       name: downline.fullName,
       level: downline.level,
       isActive: downline.isActive,
-      downlines: [] // For now, only show direct recruits in Stage 1
+      downlines: []
     }));
   };
 
@@ -137,8 +169,8 @@ const StageTree = () => {
               {/* Render children nodes */}
               {member.downlines.map((downline: any) => renderTreeNode(downline, level + 1, nodeId))}
               
-              {/* Show empty slots for 2x2 matrix */}
-              {level === 0 && member.downlines.length < 2 && (
+              {/* Show empty slots for 2x2 matrix at any level */}
+              {member.downlines.length < 2 && (
                 <>
                   {[...Array(2 - member.downlines.length)].map((_, index) => (
                     <div key={`empty-${index}`} className="relative flex flex-col items-center animate-fade-in">
