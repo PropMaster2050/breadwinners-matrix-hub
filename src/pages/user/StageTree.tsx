@@ -86,6 +86,7 @@ const StageTree = () => {
   const stage1TotalMembers = stageNumber === 1 ? Math.min(6, countAllMembersInTree(networkData)) : 0;
   const stage1Earnings = stageNumber === 1 ? stage1TotalMembers * 100 : 0;
 
+  // Auto-expand all nodes by default - no expand/collapse needed for 2x2 matrix
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   const toggleNode = (nodeId: string) => {
@@ -106,9 +107,9 @@ const StageTree = () => {
   // Render recursive tree structure with animations and interactivity
   const renderTreeNode = (member: any, level: number = 0, parentId: string = "") => {
     const nodeId = `${parentId}-${member.id}`;
-    const isExpanded = expandedNodes.has(nodeId) || level === 0;
+    const isExpanded = true; // Always show all nodes in 2x2 matrix
     const hasDownlines = member.downlines && member.downlines.length > 0;
-    const canExpand = hasDownlines && level > 0;
+    const canExpand = false; // No expand/collapse for 2x2 matrix - always show all
 
     return (
       <div 
@@ -129,18 +130,6 @@ const StageTree = () => {
           className="relative bg-card border-4 border-warning rounded-lg p-4 w-44 text-center shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-105 group"
           onClick={() => viewMemberNetwork(member.memberId)}
         >
-          {/* Expand/Collapse button for nodes with children */}
-          {canExpand && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleNode(nodeId);
-              }}
-              className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors z-10"
-            >
-              {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </button>
-          )}
 
           {/* Avatar/Icon at top */}
           <div className="mb-2 flex justify-center">
