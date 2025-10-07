@@ -27,11 +27,21 @@ const StageTree = () => {
       // Get user's direct recruits (level 1)
       const directRecruits = user.downlines.filter(d => d.level === 1);
       
+      console.log('Building Stage 1 tree for user:', user.memberId);
+      console.log('Direct recruits:', directRecruits);
+      console.log('All users in system:', allUsers);
+      
       // Build tree with their downlines
       return directRecruits.map((directRecruit) => {
-        // Find this recruit's downlines in allUsers
+        // Find this recruit's full user data in allUsers
         const recruitUser = allUsers.find((u: any) => u.memberId === directRecruit.memberId);
+        
+        console.log(`Looking for downlines of ${directRecruit.memberId}:`, recruitUser);
+        
+        // Get this recruit's direct downlines (their level 1 = our level 2)
         const secondLevelRecruits = recruitUser?.downlines?.filter((d: any) => d.level === 1) || [];
+        
+        console.log(`Second level recruits under ${directRecruit.memberId}:`, secondLevelRecruits);
         
         return {
           id: directRecruit.memberId,
