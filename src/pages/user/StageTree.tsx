@@ -71,12 +71,19 @@ const StageTree = () => {
 
   const networkData = getNetworkForStage(stageNumber);
 
-  // Stage 1 totals and earnings (2-level tree under you)
-  const stage1DirectCount = stageNumber === 1 ? networkData.length : 0;
-  const stage1IndirectCount = stageNumber === 1
-    ? networkData.reduce((sum: number, m: any) => sum + ((m.downlines?.length) || 0), 0)
-    : 0;
-  const stage1TotalMembers = stageNumber === 1 ? Math.min(6, stage1DirectCount + stage1IndirectCount) : 0;
+  // Stage 1 totals and earnings - count ALL members recursively in the tree
+  const countAllMembersInTree = (members: any[]): number => {
+    let total = 0;
+    for (const member of members) {
+      total += 1; // Count this member
+      if (member.downlines && member.downlines.length > 0) {
+        total += countAllMembersInTree(member.downlines); // Count their downlines recursively
+      }
+    }
+    return total;
+  };
+
+  const stage1TotalMembers = stageNumber === 1 ? Math.min(6, countAllMembersInTree(networkData)) : 0;
   const stage1Earnings = stageNumber === 1 ? stage1TotalMembers * 100 : 0;
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());

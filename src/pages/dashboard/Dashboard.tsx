@@ -163,10 +163,10 @@ const Dashboard = () => {
                   {(() => {
                     const withdrawalHistory = JSON.parse(localStorage.getItem(`withdrawalHistory_${user.memberId}`) || '[]');
                     const completedWithdrawals = withdrawalHistory.filter((w: any) => w.status === 'completed');
-                    return completedWithdrawals.length > 0 ? 'Completed' : (withdrawalHistory.some((w: any) => w.status === 'pending') ? 'Pending' : 'R0');
+                    return completedWithdrawals.length;
                   })()}
                 </div>
-                <div className="text-xs text-muted-foreground">Payouts</div>
+                <div className="text-xs text-muted-foreground">Successful Payouts</div>
               </div>
             </div>
 
