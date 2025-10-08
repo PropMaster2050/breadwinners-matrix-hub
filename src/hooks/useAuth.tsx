@@ -223,11 +223,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         downlines: []
       };
 
-      // Handle sponsor relationship
+      // Handle sponsor relationship and upline rewards
       if (userData.sponsorId) {
         const sponsor = storedUsers.find((u: any) => u.memberId === userData.sponsorId);
         if (sponsor) {
-          // Add this user to sponsor's downlines
+          // Add this user to sponsor's downlines at level 1
           if (!sponsor.downlines) sponsor.downlines = [];
           sponsor.downlines.push({
             memberId: newUser.memberId,
@@ -237,15 +237,84 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             isActive: true
           });
           
-          // Update sponsor's stats and earnings
+          // Update sponsor's direct recruit stats
           sponsor.directRecruits += 1;
           sponsor.totalRecruits += 1;
-          sponsor.earnings += 100; // R100 per recruit
-          sponsor.wallets.eWallet += 100;
+          
+          // Calculate sponsor's Stage 1 earnings (2×2 matrix)
+          let sponsorStage1Count = 0;
+          const sponsorDirects = sponsor.downlines.filter((d: any) => d.level === 1).slice(0, 2);
+          sponsorStage1Count += sponsorDirects.length;
+          
+          // Count second-level recruits (grandchildren)
+          sponsorDirects.forEach((direct: any) => {
+            const directUser = storedUsers.find((u: any) => u.memberId === direct.memberId);
+            if (directUser?.downlines) {
+              const secondLevel = directUser.downlines.filter((d: any) => d.level === 1).slice(0, 2);
+              sponsorStage1Count += secondLevel.length;
+            }
+          });
+          
+          // Cap at 6 members for Stage 1
+          sponsorStage1Count = Math.min(sponsorStage1Count, 6);
+          
+          // Update sponsor's earnings based on Stage 1 matrix
+          sponsor.earnings = sponsorStage1Count * 100;
+          sponsor.wallets.eWallet = sponsorStage1Count * 100;
+          
+          // Check if sponsor completed Stage 1 (6 members)
+          if (sponsorStage1Count === 6 && sponsor.stage === 1) {
+            sponsor.stage = 2; // Auto-promote to Stage 2
+          }
           
           // Add upline info to new user
           newUser.uplineId = sponsor.memberId;
           newUser.uplineName = sponsor.fullName;
+          
+          // Also update grandparent's earnings if this is a second-level recruit
+          if (sponsor.uplineId) {
+            const grandparent = storedUsers.find((u: any) => u.memberId === sponsor.uplineId);
+            if (grandparent) {
+              // Add to grandparent's downlines at level 2
+              if (!grandparent.downlines) grandparent.downlines = [];
+              
+              // Check if already exists at level 2
+              const existingDownline = grandparent.downlines.find((d: any) => d.memberId === newUser.memberId);
+              if (!existingDownline) {
+                grandparent.downlines.push({
+                  memberId: newUser.memberId,
+                  fullName: newUser.fullName,
+                  joinDate: newUser.joinDate,
+                  level: 2,
+                  isActive: true
+                });
+              }
+              
+              grandparent.totalRecruits += 1;
+              
+              // Recalculate grandparent's Stage 1 earnings
+              let gpStage1Count = 0;
+              const gpDirects = grandparent.downlines.filter((d: any) => d.level === 1).slice(0, 2);
+              gpStage1Count += gpDirects.length;
+              
+              gpDirects.forEach((direct: any) => {
+                const directUser = storedUsers.find((u: any) => u.memberId === direct.memberId);
+                if (directUser?.downlines) {
+                  const secondLevel = directUser.downlines.filter((d: any) => d.level === 1).slice(0, 2);
+                  gpStage1Count += secondLevel.length;
+                }
+              });
+              
+              gpStage1Count = Math.min(gpStage1Count, 6);
+              grandparent.earnings = gpStage1Count * 100;
+              grandparent.wallets.eWallet = gpStage1Count * 100;
+              
+              // Check if grandparent completed Stage 1
+              if (gpStage1Count === 6 && grandparent.stage === 1) {
+                grandparent.stage = 2;
+              }
+            }
+          }
         }
       }
 

@@ -21,9 +21,34 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  // Calculate matrix progress (mock data for now)
-  const matrixProgress = (user.level / 8) * 100;
-  const nextLevelRecruits = Math.max(0, 2 - user.directRecruits);
+  // Get latest user data for accurate calculations
+  const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+  const currentUserData = allUsers.find((u: any) => u.memberId === user.memberId) || user;
+  
+  // Calculate Stage 1 members (2 directs + their recruits, max 6)
+  const countStage1Members = () => {
+    if (!currentUserData.downlines) return 0;
+    
+    let count = 0;
+    const directRecruits = currentUserData.downlines.filter((d: any) => d.level === 1).slice(0, 2);
+    count += directRecruits.length;
+    
+    // Count their recruits (second level)
+    directRecruits.forEach((direct: any) => {
+      const directUser = allUsers.find((u: any) => u.memberId === direct.memberId);
+      if (directUser?.downlines) {
+        const secondLevel = directUser.downlines.filter((d: any) => d.level === 1).slice(0, 2);
+        count += secondLevel.length;
+      }
+    });
+    
+    return Math.min(count, 6);
+  };
+  
+  const stage1Members = countStage1Members();
+  const stage1Complete = stage1Members === 6;
+  const currentStageEarnings = stage1Members * 100;
+  const matrixProgress = (currentUserData.stage / 4) * 100;
 
   return (
     <div className="space-y-6">
@@ -55,8 +80,13 @@ const Dashboard = () => {
         </div>
         <div className="flex items-center gap-3">
           <Badge className="text-sm bg-gradient-to-r from-primary to-accent">
-            Stage {user.stage} • Level {user.level}
+            Stage {currentUserData.stage}
           </Badge>
+          {stage1Complete && (
+            <Badge className="text-sm bg-success text-white">
+              ✓ Stage 1 Complete
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -65,50 +95,16 @@ const Dashboard = () => {
         <Card className="border-border/50 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Earnings
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              R{((user.directRecruits + user.totalRecruits) * 100).toFixed(2)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              R100 per recruit
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Direct Recruits
-            </CardTitle>
-            <Users className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-foreground">
-              {user.directRecruits}/6
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {user.directRecruits < 6 ? `${6 - user.directRecruits} more for Stage 1` : 'Stage 1 Complete!'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/50 hover:shadow-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Matrix Level
+              Current Stage
             </CardTitle>
             <Award className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              Level {user.level}
+              Stage {currentUserData.stage}
             </div>
             <p className="text-xs text-muted-foreground">
-              {user.level < 8 ? `Next: Level ${user.level + 1}` : 'Maximum level reached!'}
+              {stage1Complete ? 'Ready for Stage 2' : 'Building your matrix'}
             </p>
           </CardContent>
         </Card>
@@ -116,16 +112,50 @@ const Dashboard = () => {
         <Card className="border-border/50 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Network
+              Stage {currentUserData.stage} Members
             </CardTitle>
-            <Target className="h-4 w-4 text-primary" />
+            <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-foreground">
-              {user.totalRecruits}
+              {stage1Members}/6
             </div>
             <p className="text-xs text-muted-foreground">
-              All levels combined
+              {stage1Complete ? 'Stage Complete!' : `${6 - stage1Members} more needed`}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Stage {currentUserData.stage} Earnings
+            </CardTitle>
+            <TrendingUp className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              R{currentStageEarnings.toFixed(0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              R100 × {stage1Members} members
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Earnings
+            </CardTitle>
+            <Wallet className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground">
+              R{currentStageEarnings.toFixed(0)}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              All stages combined
             </p>
           </CardContent>
         </Card>
@@ -147,7 +177,7 @@ const Dashboard = () => {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Level {user.level} of 8</span>
+                <span>Stage {currentUserData.stage} of 4</span>
                 <span>{matrixProgress.toFixed(0)}% Complete</span>
               </div>
               <Progress value={matrixProgress} className="h-3" />
@@ -155,8 +185,8 @@ const Dashboard = () => {
             
             <div className="grid grid-cols-2 gap-4 pt-2">
               <div className="text-center p-3 rounded-lg bg-accent/10 border border-accent/20">
-                <div className="text-xl font-bold text-primary">R{((user.directRecruits + user.totalRecruits) * 100).toFixed(0)}</div>
-                <div className="text-xs text-muted-foreground">Total Earnings</div>
+                <div className="text-xl font-bold text-primary">{stage1Members}/6</div>
+                <div className="text-xs text-muted-foreground">Members in Stage {currentUserData.stage}</div>
               </div>
               <div className="text-center p-3 rounded-lg bg-primary/10 border border-primary/20">
                 <div className="text-xl font-bold text-primary">
@@ -266,15 +296,28 @@ const Dashboard = () => {
               <Badge variant="secondary">Active</Badge>
             </div>
 
-            {user.directRecruits === 0 && (
+            {stage1Members === 0 && (
               <div className="text-center p-6 rounded-lg bg-primary/5 border border-primary/20">
                 <UserPlus className="h-12 w-12 mx-auto mb-3 text-primary" />
                 <h3 className="font-semibold text-foreground mb-2">Ready to grow your network?</h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Start recruiting 6 members to complete Stage 1 and earn R600 (R100 x 6)!
+                  Build your 2×2 matrix: Recruit 2 members, they each recruit 2 = 6 total = R600!
                 </p>
                 <Button className="bg-gradient-to-r from-primary to-accent">
                   Start Recruiting
+                </Button>
+              </div>
+            )}
+            
+            {stage1Complete && (
+              <div className="text-center p-6 rounded-lg bg-success/10 border border-success">
+                <Award className="h-12 w-12 mx-auto mb-3 text-success" />
+                <h3 className="font-semibold text-foreground mb-2">🎉 Stage 1 Complete!</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Congratulations! You've earned R600 from your Stage 1 matrix. Ready for Stage 2?
+                </p>
+                <Button className="bg-success hover:bg-success/90 text-white">
+                  View Stage 2
                 </Button>
               </div>
             )}

@@ -17,40 +17,36 @@ const StageTree = () => {
   
   // Get network data from user's downlines - build 2-level tree for Stage 1
   const getNetworkForStage = (stageNum: number) => {
-    if (!user.downlines || user.downlines.length === 0) return [];
-    
     // Get all users from localStorage to build the tree
     const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+    const currentUserData = allUsers.find((u: any) => u.memberId === user.memberId);
     
-    // For Stage 1: Build a 2-level tree (direct recruits + their recruits)
+    if (!currentUserData?.downlines || currentUserData.downlines.length === 0) return [];
+    
+    // For Stage 1: Build a 2-level tree (2 directs + their 4 recruits = 6 total)
     if (stageNum === 1) {
-      // Get user's direct recruits (level 1)
-      const directRecruits = user.downlines.filter(d => d.level === 1);
-      
+      // Get user's direct recruits (level 1) - limited to 2 for Stage 1
+      const directRecruits = currentUserData.downlines.filter((d: any) => d.level === 1).slice(0, 2);
       
       // Build tree with their downlines
-      return directRecruits.map((directRecruit) => {
+      return directRecruits.map((directRecruit: any) => {
         // Find this recruit's full user data in allUsers
         const recruitUser = allUsers.find((u: any) => u.memberId === directRecruit.memberId);
         
-        
-        
-        // Get this recruit's direct downlines (their level 1 = our level 2)
-        const secondLevelRecruits = recruitUser?.downlines?.filter((d: any) => d.level === 1) || [];
-        
-        
+        // Get this recruit's direct downlines (their level 1 = our level 2) - limited to 2 each
+        const secondLevelRecruits = recruitUser?.downlines?.filter((d: any) => d.level === 1).slice(0, 2) || [];
         
         return {
           id: directRecruit.memberId,
           memberId: directRecruit.memberId,
           name: directRecruit.fullName,
-          level: directRecruit.level,
+          level: 1,
           isActive: directRecruit.isActive,
           downlines: secondLevelRecruits.map((secondLevel: any) => ({
             id: secondLevel.memberId,
             memberId: secondLevel.memberId,
             name: secondLevel.fullName,
-            level: 2, // Second level in YOUR tree
+            level: 2,
             isActive: secondLevel.isActive,
             downlines: []
           }))
@@ -59,7 +55,7 @@ const StageTree = () => {
     }
     
     // For other stages, use existing logic
-    return user.downlines.map((downline) => ({
+    return currentUserData.downlines.map((downline: any) => ({
       id: downline.memberId,
       memberId: downline.memberId,
       name: downline.fullName,
