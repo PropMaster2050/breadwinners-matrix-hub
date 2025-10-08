@@ -67,20 +67,156 @@ const StageTree = () => {
 
   const networkData = getNetworkForStage(stageNumber);
 
-  // Stage 1 totals and earnings - count ALL members recursively in the tree
+  // Count all members in the tree recursively
   const countAllMembersInTree = (members: any[]): number => {
     let total = 0;
     for (const member of members) {
-      total += 1; // Count this member
+      total += 1;
       if (member.downlines && member.downlines.length > 0) {
-        total += countAllMembersInTree(member.downlines); // Count their downlines recursively
+        total += countAllMembersInTree(member.downlines);
       }
     }
     return total;
   };
 
-  const stage1TotalMembers = stageNumber === 1 ? Math.min(6, countAllMembersInTree(networkData)) : 0;
-  const stage1Earnings = stageNumber === 1 ? stage1TotalMembers * 100 : 0;
+  // Check if a member has completed a specific stage
+  const hasMemberCompletedStage = (memberId: string, stage: number): boolean => {
+    const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+    const memberData = allUsers.find((u: any) => u.memberId === memberId);
+    if (!memberData) return false;
+    
+    if (stage === 1) {
+      // Stage 1 complete: 6 members (2 directs + 4 indirects)
+      const totalMembers = memberData.downlines?.length || 0;
+      let indirectCount = 0;
+      memberData.downlines?.forEach((d: any) => {
+        const downlineUser = allUsers.find((u: any) => u.memberId === d.memberId);
+        indirectCount += downlineUser?.downlines?.length || 0;
+      });
+      return totalMembers >= 2 && (totalMembers + indirectCount) >= 6;
+    } else if (stage === 2) {
+      // Stage 2 complete: 6 Stage 1 members who completed their Stage 1
+      const stage1Members = memberData.downlines || [];
+      const completedStage1 = stage1Members.filter((d: any) => 
+        hasMemberCompletedStage(d.memberId, 1)
+      );
+      return completedStage1.length >= 6;
+    } else if (stage === 3) {
+      // Stage 3 complete: 14 Stage 2 members who completed their Stage 2
+      // Get all downlines and their downlines (deeper network)
+      let allNetworkMembers: any[] = [];
+      const getDeepNetwork = (members: any[]) => {
+        members.forEach(m => {
+          const memberUser = allUsers.find((u: any) => u.memberId === m.memberId);
+          if (memberUser?.downlines) {
+            allNetworkMembers.push(...memberUser.downlines);
+            getDeepNetwork(memberUser.downlines);
+          }
+        });
+      };
+      getDeepNetwork(memberData.downlines || []);
+      const completedStage2 = allNetworkMembers.filter((d: any) => 
+        hasMemberCompletedStage(d.memberId, 2)
+      );
+      return completedStage2.length >= 14;
+    }
+    return false;
+  };
+
+  // Calculate stage-specific data
+  const calculateStageData = () => {
+    if (stageNumber === 1) {
+      const totalMembers = Math.min(6, countAllMembersInTree(networkData));
+      return {
+        totalMembers,
+        earnings: totalMembers * 100,
+        maxMembers: 6,
+        earningsPerMember: 100
+      };
+    } else if (stageNumber === 2) {
+      // Stage 2: Show 6 members from Stage 1, count only those who completed Stage 1
+      const completedMembers = networkData.filter((member: any) => 
+        hasMemberCompletedStage(member.memberId, 1)
+      );
+      return {
+        totalMembers: completedMembers.length,
+        earnings: completedMembers.length * 200,
+        maxMembers: 6,
+        earningsPerMember: 200,
+        completedMembers
+      };
+    } else if (stageNumber === 3) {
+      // Stage 3: Show 14 positions, count those who completed Stage 2
+      const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+      const currentUserData = allUsers.find((u: any) => u.memberId === user.memberId);
+      
+      // Get all downlines from Stage 1 and their networks
+      let allNetworkMembers: any[] = [];
+      const getDeepNetwork = (members: any[]) => {
+        members.forEach((m: any) => {
+          const memberUser = allUsers.find((u: any) => u.memberId === m.memberId);
+          if (memberUser?.downlines) {
+            allNetworkMembers.push(...memberUser.downlines.map((d: any) => ({
+              ...d,
+              parentId: m.memberId
+            })));
+            getDeepNetwork(memberUser.downlines);
+          }
+        });
+      };
+      getDeepNetwork(currentUserData?.downlines || []);
+      
+      const completedStage2Members = allNetworkMembers
+        .filter((m: any) => hasMemberCompletedStage(m.memberId, 2))
+        .slice(0, 14);
+      
+      return {
+        totalMembers: completedStage2Members.length,
+        earnings: completedStage2Members.length * 250,
+        maxMembers: 14,
+        earningsPerMember: 250,
+        completedMembers: completedStage2Members
+      };
+    } else if (stageNumber === 4) {
+      // Stage 4: Show 14 positions, count those who completed Stage 3
+      const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+      const currentUserData = allUsers.find((u: any) => u.memberId === user.memberId);
+      
+      let allNetworkMembers: any[] = [];
+      const getDeepNetwork = (members: any[]) => {
+        members.forEach((m: any) => {
+          const memberUser = allUsers.find((u: any) => u.memberId === m.memberId);
+          if (memberUser?.downlines) {
+            allNetworkMembers.push(...memberUser.downlines.map((d: any) => ({
+              ...d,
+              parentId: m.memberId
+            })));
+            getDeepNetwork(memberUser.downlines);
+          }
+        });
+      };
+      getDeepNetwork(currentUserData?.downlines || []);
+      
+      const completedStage3Members = allNetworkMembers
+        .filter((m: any) => hasMemberCompletedStage(m.memberId, 3))
+        .slice(0, 14);
+      
+      const baseEarnings = completedStage3Members.length * 1000;
+      const voucherBonus = completedStage3Members.length === 14 ? 100000 : 0;
+      
+      return {
+        totalMembers: completedStage3Members.length,
+        earnings: baseEarnings + voucherBonus,
+        maxMembers: 14,
+        earningsPerMember: 1000,
+        completedMembers: completedStage3Members,
+        voucherBonus
+      };
+    }
+    return { totalMembers: 0, earnings: 0, maxMembers: 0, earningsPerMember: 0 };
+  };
+
+  const stageData = calculateStageData();
 
   // Auto-expand all nodes by default - no expand/collapse needed for 2x2 matrix
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -205,37 +341,24 @@ const StageTree = () => {
 
   const getStageRequirement = (stageNum: number) => {
     switch(stageNum) {
-      case 1: return "2×2 Matrix: 6 members total (2 direct recruits, each with 2 of their own)";
-      case 2: return "Stage 2: 14 members from Stage 1 must complete their Stage 1 (14×6 = 84 members)";
-      case 3: return "Stage 3: 14 members from Stage 2 must complete their Stage 2 (168 members)";
-      case 4: return "Stage 4: 14 members from Stage 3 must complete their Stage 3 (336 members)";
+      case 1: return "2×2 Matrix: 6 members total (R100 per member = R600 max)";
+      case 2: return "2×3 Matrix: 6 Stage 1 members who complete their Stage 1 (R200 per completion = R1,200 max)";
+      case 3: return "14 Stage 2 members who complete their Stage 2 (R250 per completion = R3,500 max)";
+      case 4: return "14 Stage 3 members who complete their Stage 3 (R1,000 per completion + R100k voucher = R114,000 max)";
       default: return "";
     }
   };
 
   const getStageProgress = (stageNum: number) => {
-    const total = user.totalRecruits;
-    switch(stageNum) {
-      case 1: return { current: Math.min(total, 6), required: 6 };
-      case 2: return { current: Math.min(Math.max(0, total - 6), 84), required: 84 };
-      case 3: return { current: Math.min(Math.max(0, total - 90), 168), required: 168 };
-      case 4: return { current: Math.min(Math.max(0, total - 258), 336), required: 336 };
-      default: return { current: 0, required: 0 };
-    }
+    return { current: stageData.totalMembers, required: stageData.maxMembers };
   };
 
   const isStageComplete = (stageNum: number) => {
-    switch(stageNum) {
-      case 1: return user.directRecruits >= 2 && user.totalRecruits >= 6;
-      case 2: return user.totalRecruits >= 90; // 6 from Stage 1 + 84 new
-      case 3: return user.totalRecruits >= 258; // 90 from Stage 2 + 168 new
-      case 4: return user.totalRecruits >= 594; // 258 from Stage 3 + 336 new
-      default: return false;
-    }
+    return stageData.totalMembers >= stageData.maxMembers;
   };
 
-  const isLocked = stageNumber === 1 ? stage1TotalMembers === 6 : isStageComplete(stageNumber);
-  const progress = stageNumber === 1 ? { current: stage1TotalMembers, required: 6 } : getStageProgress(stageNumber);
+  const isLocked = isStageComplete(stageNumber);
+  const progress = getStageProgress(stageNumber);
   const progressPercentage = progress.required > 0 ? (progress.current / progress.required) * 100 : 0;
 
   return (
@@ -258,9 +381,12 @@ const StageTree = () => {
             {progress.current} / {progress.required} Members
           </Badge>
         )}
-        {stageNumber === 1 && (
-          <Badge variant="outline">
-            Earnings: R{stage1Earnings}
+        <Badge variant="outline">
+          Earnings: R{stageData.earnings.toLocaleString()}
+        </Badge>
+        {stageNumber === 4 && stageData.voucherBonus > 0 && (
+          <Badge className="bg-gradient-to-r from-primary to-accent text-white">
+            + R100k Voucher Unlocked! 🎉
           </Badge>
         )}
       </div>
@@ -292,13 +418,16 @@ const StageTree = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            {stageNumber === 1 ? "Stage 1: 2×2 Binary Matrix (6 Members)" : 
-             stageNumber === 2 ? "Stage 2: 14×6 Matrix (84 Members)" : 
-             stageNumber === 3 ? "Stage 3: Extended Matrix (168 Members)" : 
-             "Stage 4: Full Matrix (336 Members)"}
+            {stageNumber === 1 ? "Stage 1: 2×2 Matrix (6 Members)" : 
+             stageNumber === 2 ? "Stage 2: 2×3 Matrix (6 Completed Stage 1)" : 
+             stageNumber === 3 ? "Stage 3: 14 Completed Stage 2" : 
+             "Stage 4: 14 Completed Stage 3"}
           </CardTitle>
           <CardDescription>
-            Your Stage {stageNumber} genealogy tree structure • Click any member to view their network
+            {stageNumber === 1 ? "Your Stage 1 genealogy tree • Click any member to view their network" :
+             stageNumber === 2 ? "Only Stage 1 completers appear below • R200 per completed member" :
+             stageNumber === 3 ? "Only Stage 2 completers appear below • R250 per completed member" :
+             "Only Stage 3 completers appear below • R1,000 per completed member + R100k voucher when complete"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -322,56 +451,104 @@ const StageTree = () => {
             )}
 
             {/* Network Tree */}
-            {networkData.length > 0 ? (
-              <div className="relative">
-                {/* Horizontal line connecting direct recruits */}
-                {networkData.length > 1 && (
-                  <div 
-                    className="absolute -top-8 h-0.5 bg-warning transition-all duration-300" 
-                    style={{ 
-                      left: '50%',
-                      right: '50%',
-                      width: `${(networkData.length - 1) * 12}rem`,
-                      transform: 'translateX(-50%)'
-                    }}
-                  />
-                )}
-                <div className="flex gap-12 justify-center flex-wrap">
-                  {networkData.map((member: any) => renderTreeNode(member, 1))}
-                  
-                  {/* Show empty slots for incomplete 2x2 matrix */}
-                  {stageNumber === 1 && networkData.length < 2 && (
-                    <>
-                      {[...Array(2 - networkData.length)].map((_, index) => (
-                        <div key={`empty-direct-${index}`} className="relative flex flex-col items-center animate-fade-in">
-                          <div className="absolute -top-8 left-1/2 w-0.5 h-8 bg-warning/50" style={{ transform: 'translateX(-50%)' }} />
-                          <div className="bg-muted/50 border-4 border-dashed border-border rounded-lg p-4 w-44 text-center">
-                            <div className="mb-2 flex justify-center">
-                              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                                <Users className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            </div>
-                            <div className="text-xs font-bold text-muted-foreground mb-1">STAGE {stageNumber}</div>
-                            <div className="text-xs text-muted-foreground">Empty Slot</div>
-                            <div className="text-xs text-muted-foreground mt-1">Position {networkData.length + index + 1}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </>
+            {stageNumber === 1 ? (
+              // Stage 1: Show 2x2 matrix as before
+              networkData.length > 0 ? (
+                <div className="relative">
+                  {networkData.length > 1 && (
+                    <div 
+                      className="absolute -top-8 h-0.5 bg-warning transition-all duration-300" 
+                      style={{ 
+                        left: '50%',
+                        right: '50%',
+                        width: `${(networkData.length - 1) * 12}rem`,
+                        transform: 'translateX(-50%)'
+                      }}
+                    />
                   )}
+                  <div className="flex gap-12 justify-center flex-wrap">
+                    {networkData.map((member: any) => renderTreeNode(member, 1))}
+                    
+                    {networkData.length < 2 && (
+                      <>
+                        {[...Array(2 - networkData.length)].map((_, index) => (
+                          <div key={`empty-direct-${index}`} className="relative flex flex-col items-center animate-fade-in">
+                            <div className="absolute -top-8 left-1/2 w-0.5 h-8 bg-warning/50" style={{ transform: 'translateX(-50%)' }} />
+                            <div className="bg-muted/50 border-4 border-dashed border-border rounded-lg p-4 w-44 text-center">
+                              <div className="mb-2 flex justify-center">
+                                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                                  <Users className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                              </div>
+                              <div className="text-xs font-bold text-muted-foreground mb-1">STAGE 1</div>
+                              <div className="text-xs text-muted-foreground">Empty Slot</div>
+                              <div className="text-xs text-muted-foreground mt-1">Position {networkData.length + index + 1}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-12 animate-fade-in">
+                  <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No members in Stage 1 yet</h3>
+                  <p className="text-muted-foreground mb-4">Start recruiting to build your Stage 1 network</p>
+                </div>
+              )
             ) : (
-              <div className="text-center py-12 animate-fade-in">
-                <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No members in Stage {stageNumber} yet</h3>
-                <p className="text-muted-foreground mb-4">
-                  Start recruiting to build your Stage {stageNumber} network
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  💡 Tip: Each user can recruit exactly 2 direct members. Extra recruits will automatically spillover to the next available position.
-                </p>
-              </div>
+              // Stages 2, 3, 4: Show only completed members
+              stageData.completedMembers && stageData.completedMembers.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {stageData.completedMembers.map((member: any, index: number) => (
+                    <div 
+                      key={member.memberId}
+                      className="relative bg-gradient-to-br from-success/20 to-success/10 border-2 border-success rounded-lg p-4 text-center shadow-lg animate-fade-in cursor-pointer hover:scale-105 transition-all duration-300"
+                      onClick={() => viewMemberNetwork(member.memberId)}
+                      style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                      <div className="mb-2 flex justify-center">
+                        <div className="w-12 h-12 rounded-full bg-success flex items-center justify-center ring-2 ring-success">
+                          <Users className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-success mb-1">✓ COMPLETED</div>
+                      <div className="text-sm font-semibold text-foreground">{member.memberId}</div>
+                      <div className="text-xs text-muted-foreground">{member.fullName}</div>
+                      <Badge className="mt-2 bg-success text-white text-xs">
+                        Stage {stageNumber - 1} Complete
+                      </Badge>
+                    </div>
+                  ))}
+                  
+                  {/* Show empty slots */}
+                  {[...Array(stageData.maxMembers - stageData.completedMembers.length)].map((_, index) => (
+                    <div key={`empty-${index}`} className="bg-muted/30 border-2 border-dashed border-muted rounded-lg p-4 text-center">
+                      <div className="mb-2 flex justify-center">
+                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                          <Users className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      </div>
+                      <div className="text-xs font-bold text-muted-foreground mb-1">PENDING</div>
+                      <div className="text-xs text-muted-foreground">Awaiting Stage {stageNumber - 1} Completion</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 animate-fade-in">
+                  <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No completed members in Stage {stageNumber} yet</h3>
+                  <p className="text-muted-foreground mb-4">
+                    {stageNumber === 2 && "Your Stage 1 members need to complete their Stage 1 (6 members each) to appear here"}
+                    {stageNumber === 3 && "Your network members need to complete their Stage 2 to appear here"}
+                    {stageNumber === 4 && "Your network members need to complete their Stage 3 to appear here"}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    💡 Members will automatically appear here once they complete Stage {stageNumber - 1}
+                  </p>
+                </div>
+              )
             )}
           </div>
         </CardContent>
