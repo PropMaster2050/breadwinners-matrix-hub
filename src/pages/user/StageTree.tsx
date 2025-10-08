@@ -79,6 +79,27 @@ const StageTree = () => {
     return total;
   };
 
+  // Count all members in tree recursively for 2x3 matrix (3 levels deep)
+  const countTreeMembers = (members: any[], maxLevels: number): number => {
+    const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+    let total = 0;
+    
+    const countRecursive = (memberList: any[], currentLevel: number) => {
+      if (currentLevel > maxLevels) return;
+      
+      memberList.forEach(member => {
+        total += 1;
+        const memberUser = allUsers.find((u: any) => u.memberId === member.memberId);
+        if (memberUser?.downlines && currentLevel < maxLevels) {
+          countRecursive(memberUser.downlines, currentLevel + 1);
+        }
+      });
+    };
+    
+    countRecursive(members, 1);
+    return total;
+  };
+
   // Check if a member has completed a specific stage
   const hasMemberCompletedStage = (memberId: string, stage: number): boolean => {
     const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
@@ -86,35 +107,33 @@ const StageTree = () => {
     if (!memberData) return false;
     
     if (stage === 1) {
-      // Stage 1 complete: 6 members (2 directs + 4 indirects)
-      const totalMembers = memberData.downlines?.length || 0;
-      let indirectCount = 0;
-      memberData.downlines?.forEach((d: any) => {
-        const downlineUser = allUsers.find((u: any) => u.memberId === d.memberId);
-        indirectCount += downlineUser?.downlines?.length || 0;
-      });
-      return totalMembers >= 2 && (totalMembers + indirectCount) >= 6;
+      // Stage 1 complete: 6 members in 2×2 matrix (2 directs + 4 indirects in 2 levels)
+      const directRecruits = memberData.downlines?.slice(0, 2) || [];
+      const totalInTree = countTreeMembers(directRecruits, 2);
+      return directRecruits.length === 2 && totalInTree >= 6;
     } else if (stage === 2) {
-      // Stage 2 complete: 6 Stage 1 members who completed their Stage 1
-      const stage1Members = memberData.downlines || [];
-      const completedStage1 = stage1Members.filter((d: any) => 
-        hasMemberCompletedStage(d.memberId, 1)
-      );
-      return completedStage1.length >= 6;
+      // Stage 2 complete: 14 members in 2×3 matrix (3 levels deep)
+      const directRecruits = memberData.downlines?.slice(0, 2) || [];
+      const totalInTree = countTreeMembers(directRecruits, 3);
+      return directRecruits.length >= 2 && totalInTree >= 14;
     } else if (stage === 3) {
-      // Stage 3 complete: 14 Stage 2 members who completed their Stage 2
-      // Get all downlines and their downlines (deeper network)
+      // Stage 3 complete: 14 downlines who each completed Stage 2
       let allNetworkMembers: any[] = [];
-      const getDeepNetwork = (members: any[]) => {
+      const getDeepNetwork = (members: any[], depth: number = 0) => {
+        if (depth > 5) return; // Prevent infinite recursion
         members.forEach(m => {
           const memberUser = allUsers.find((u: any) => u.memberId === m.memberId);
           if (memberUser?.downlines) {
-            allNetworkMembers.push(...memberUser.downlines);
-            getDeepNetwork(memberUser.downlines);
+            allNetworkMembers.push(...memberUser.downlines.map((d: any) => ({
+              ...d,
+              depth: depth + 1
+            })));
+            getDeepNetwork(memberUser.downlines, depth + 1);
           }
         });
       };
       getDeepNetwork(memberData.downlines || []);
+      
       const completedStage2 = allNetworkMembers.filter((d: any) => 
         hasMemberCompletedStage(d.memberId, 2)
       );
@@ -125,6 +144,9 @@ const StageTree = () => {
 
   // Calculate stage-specific data
   const calculateStageData = () => {
+    const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
+    const currentUserData = allUsers.find((u: any) => u.memberId === user.memberId);
+    
     if (stageNumber === 1) {
       const totalMembers = Math.min(6, countAllMembersInTree(networkData));
       return {
@@ -134,33 +156,46 @@ const StageTree = () => {
         earningsPerMember: 100
       };
     } else if (stageNumber === 2) {
-      // Stage 2: Show 6 members from Stage 1, count only those who completed Stage 1
-      const completedMembers = networkData.filter((member: any) => 
+      // Stage 2: 2×3 matrix = 14 members (2 directs, each with 2, each with 2 = 2+4+8)
+      // Show only Stage 1 directs who completed their Stage 1
+      const stage1Directs = currentUserData?.downlines?.slice(0, 6) || [];
+      const completedStage1Members = stage1Directs.filter((member: any) => 
         hasMemberCompletedStage(member.memberId, 1)
       );
+      
+      // For each completed Stage 1 member, they should have built their 2×3 tree (14 members)
+      // So total members = number of completed Stage 1 members
+      const totalMembers = completedStage1Members.length;
+      const baseEarnings = totalMembers * 200;
+      
+      // Bonus incentive when all 14 positions filled (6 Stage 1 completers × ~2.3 avg = 14 total network)
+      const isComplete = totalMembers >= 6;
+      const incentive = isComplete ? "Samsung Smartphone" : null;
+      const bonusCash = isComplete ? 2800 : baseEarnings;
+      
       return {
-        totalMembers: completedMembers.length,
-        earnings: completedMembers.length * 200,
-        maxMembers: 6,
+        totalMembers,
+        earnings: bonusCash,
+        maxMembers: 6, // 6 Stage 1 members who need to complete
         earningsPerMember: 200,
-        completedMembers
+        completedMembers: completedStage1Members,
+        incentive,
+        isComplete
       };
     } else if (stageNumber === 3) {
-      // Stage 3: Show 14 positions, count those who completed Stage 2
-      const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
-      const currentUserData = allUsers.find((u: any) => u.memberId === user.memberId);
-      
-      // Get all downlines from Stage 1 and their networks
+      // Stage 3: 14 downlines who completed Stage 2
       let allNetworkMembers: any[] = [];
-      const getDeepNetwork = (members: any[]) => {
+      const getDeepNetwork = (members: any[], depth: number = 0) => {
+        if (depth > 10) return;
         members.forEach((m: any) => {
           const memberUser = allUsers.find((u: any) => u.memberId === m.memberId);
           if (memberUser?.downlines) {
             allNetworkMembers.push(...memberUser.downlines.map((d: any) => ({
               ...d,
-              parentId: m.memberId
+              parentId: m.memberId,
+              depth: depth + 1
             })));
-            getDeepNetwork(memberUser.downlines);
+            getDeepNetwork(memberUser.downlines, depth + 1);
           }
         });
       };
@@ -170,28 +205,35 @@ const StageTree = () => {
         .filter((m: any) => hasMemberCompletedStage(m.memberId, 2))
         .slice(0, 14);
       
+      const totalMembers = completedStage2Members.length;
+      const baseEarnings = totalMembers * 250;
+      const isComplete = totalMembers >= 14;
+      const bonusCash = isComplete ? 3500 : baseEarnings;
+      const incentive = isComplete ? "R20,000 Voucher" : null;
+      
       return {
-        totalMembers: completedStage2Members.length,
-        earnings: completedStage2Members.length * 250,
+        totalMembers,
+        earnings: bonusCash,
         maxMembers: 14,
         earningsPerMember: 250,
-        completedMembers: completedStage2Members
+        completedMembers: completedStage2Members,
+        incentive,
+        isComplete
       };
     } else if (stageNumber === 4) {
-      // Stage 4: Show 14 positions, count those who completed Stage 3
-      const allUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
-      const currentUserData = allUsers.find((u: any) => u.memberId === user.memberId);
-      
+      // Stage 4: 14 downlines who completed Stage 3
       let allNetworkMembers: any[] = [];
-      const getDeepNetwork = (members: any[]) => {
+      const getDeepNetwork = (members: any[], depth: number = 0) => {
+        if (depth > 10) return;
         members.forEach((m: any) => {
           const memberUser = allUsers.find((u: any) => u.memberId === m.memberId);
           if (memberUser?.downlines) {
             allNetworkMembers.push(...memberUser.downlines.map((d: any) => ({
               ...d,
-              parentId: m.memberId
+              parentId: m.memberId,
+              depth: depth + 1
             })));
-            getDeepNetwork(memberUser.downlines);
+            getDeepNetwork(memberUser.downlines, depth + 1);
           }
         });
       };
@@ -201,16 +243,21 @@ const StageTree = () => {
         .filter((m: any) => hasMemberCompletedStage(m.memberId, 3))
         .slice(0, 14);
       
-      const baseEarnings = completedStage3Members.length * 1000;
-      const voucherBonus = completedStage3Members.length === 14 ? 100000 : 0;
+      const totalMembers = completedStage3Members.length;
+      const baseEarnings = totalMembers * 1000;
+      const isComplete = totalMembers >= 14;
+      const bonusCash = isComplete ? 14000 : baseEarnings;
+      const incentive = isComplete ? "R100,000 Voucher" : null;
       
       return {
-        totalMembers: completedStage3Members.length,
-        earnings: baseEarnings + voucherBonus,
+        totalMembers,
+        earnings: bonusCash,
         maxMembers: 14,
         earningsPerMember: 1000,
         completedMembers: completedStage3Members,
-        voucherBonus
+        incentive,
+        isComplete,
+        voucherBonus: isComplete ? 100000 : 0
       };
     }
     return { totalMembers: 0, earnings: 0, maxMembers: 0, earningsPerMember: 0 };
@@ -342,9 +389,9 @@ const StageTree = () => {
   const getStageRequirement = (stageNum: number) => {
     switch(stageNum) {
       case 1: return "2×2 Matrix: 6 members total (R100 per member = R600 max)";
-      case 2: return "2×3 Matrix: 6 Stage 1 members who complete their Stage 1 (R200 per completion = R1,200 max)";
-      case 3: return "14 Stage 2 members who complete their Stage 2 (R250 per completion = R3,500 max)";
-      case 4: return "14 Stage 3 members who complete their Stage 3 (R1,000 per completion + R100k voucher = R114,000 max)";
+      case 2: return "2×3 Matrix: 14 members total • 6 Stage 1 completers earn you R200 each = R2,800 + Samsung Smartphone";
+      case 3: return "2×3 Matrix: 14 Stage 2 completers earn you R250 each = R3,500 + R20,000 Voucher";
+      case 4: return "2×3 Matrix: 14 Stage 3 completers earn you R1,000 each = R14,000 + R100,000 Voucher";
       default: return "";
     }
   };
@@ -384,9 +431,9 @@ const StageTree = () => {
         <Badge variant="outline">
           Earnings: R{stageData.earnings.toLocaleString()}
         </Badge>
-        {stageNumber === 4 && stageData.voucherBonus > 0 && (
+        {stageData.incentive && (
           <Badge className="bg-gradient-to-r from-primary to-accent text-white">
-            + R100k Voucher Unlocked! 🎉
+            + {stageData.incentive} 🎁
           </Badge>
         )}
       </div>
@@ -419,15 +466,15 @@ const StageTree = () => {
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
             {stageNumber === 1 ? "Stage 1: 2×2 Matrix (6 Members)" : 
-             stageNumber === 2 ? "Stage 2: 2×3 Matrix (6 Completed Stage 1)" : 
-             stageNumber === 3 ? "Stage 3: 14 Completed Stage 2" : 
-             "Stage 4: 14 Completed Stage 3"}
+             stageNumber === 2 ? "Stage 2: 2×3 Matrix (14 Members Total)" : 
+             stageNumber === 3 ? "Stage 3: 2×3 Matrix (14 Stage 2 Completers)" : 
+             "Stage 4: 2×3 Matrix (14 Stage 3 Completers)"}
           </CardTitle>
           <CardDescription>
             {stageNumber === 1 ? "Your Stage 1 genealogy tree • Click any member to view their network" :
-             stageNumber === 2 ? "Only Stage 1 completers appear below • R200 per completed member" :
-             stageNumber === 3 ? "Only Stage 2 completers appear below • R250 per completed member" :
-             "Only Stage 3 completers appear below • R1,000 per completed member + R100k voucher when complete"}
+             stageNumber === 2 ? "6 Stage 1 completers build 14-member network • R200 per completer • R2,800 + Samsung when complete" :
+             stageNumber === 3 ? "14 Stage 2 completers • R250 each • R3,500 + R20k Voucher when complete" :
+             "14 Stage 3 completers • R1,000 each • R14,000 + R100k Voucher when complete"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -498,54 +545,80 @@ const StageTree = () => {
                 </div>
               )
             ) : (
-              // Stages 2, 3, 4: Show only completed members
+              // Stages 2, 3, 4: Show only completed members in grid
               stageData.completedMembers && stageData.completedMembers.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {stageData.completedMembers.map((member: any, index: number) => (
-                    <div 
-                      key={member.memberId}
-                      className="relative bg-gradient-to-br from-success/20 to-success/10 border-2 border-success rounded-lg p-4 text-center shadow-lg animate-fade-in cursor-pointer hover:scale-105 transition-all duration-300"
-                      onClick={() => viewMemberNetwork(member.memberId)}
-                      style={{ animationDelay: `${index * 50}ms` }}
-                    >
-                      <div className="mb-2 flex justify-center">
-                        <div className="w-12 h-12 rounded-full bg-success flex items-center justify-center ring-2 ring-success">
-                          <Users className="h-6 w-6 text-white" />
+                <div className="w-full space-y-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {stageData.completedMembers.map((member: any, index: number) => (
+                      <div 
+                        key={member.memberId}
+                        className="relative bg-gradient-to-br from-success/20 to-success/10 border-2 border-success rounded-lg p-4 text-center shadow-lg animate-fade-in cursor-pointer hover:scale-105 transition-all duration-300"
+                        onClick={() => viewMemberNetwork(member.memberId)}
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="mb-2 flex justify-center">
+                          <div className="w-12 h-12 rounded-full bg-success flex items-center justify-center ring-2 ring-success">
+                            <Users className="h-6 w-6 text-white" />
+                          </div>
+                        </div>
+                        <div className="text-xs font-bold text-success mb-1">✓ COMPLETED</div>
+                        <div className="text-sm font-semibold text-foreground truncate">{member.memberId}</div>
+                        <div className="text-xs text-muted-foreground truncate">{member.fullName}</div>
+                        <Badge className="mt-2 bg-success text-white text-xs">
+                          Stage {stageNumber - 1} ✓
+                        </Badge>
+                      </div>
+                    ))}
+                    
+                    {/* Show empty slots */}
+                    {[...Array(stageData.maxMembers - stageData.completedMembers.length)].map((_, index) => (
+                      <div key={`empty-${index}`} className="bg-muted/30 border-2 border-dashed border-muted rounded-lg p-4 text-center">
+                        <div className="mb-2 flex justify-center">
+                          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                            <Users className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        </div>
+                        <div className="text-xs font-bold text-muted-foreground mb-1">PENDING</div>
+                        <div className="text-xs text-muted-foreground">
+                          {stageNumber === 2 ? "Stage 1 Needed" : `Stage ${stageNumber - 1} Needed`}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Slot {stageData.completedMembers.length + index + 1}/{stageData.maxMembers}
                         </div>
                       </div>
-                      <div className="text-xs font-bold text-success mb-1">✓ COMPLETED</div>
-                      <div className="text-sm font-semibold text-foreground">{member.memberId}</div>
-                      <div className="text-xs text-muted-foreground">{member.fullName}</div>
-                      <Badge className="mt-2 bg-success text-white text-xs">
-                        Stage {stageNumber - 1} Complete
-                      </Badge>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                   
-                  {/* Show empty slots */}
-                  {[...Array(stageData.maxMembers - stageData.completedMembers.length)].map((_, index) => (
-                    <div key={`empty-${index}`} className="bg-muted/30 border-2 border-dashed border-muted rounded-lg p-4 text-center">
-                      <div className="mb-2 flex justify-center">
-                        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                          <Users className="h-6 w-6 text-muted-foreground" />
-                        </div>
-                      </div>
-                      <div className="text-xs font-bold text-muted-foreground mb-1">PENDING</div>
-                      <div className="text-xs text-muted-foreground">Awaiting Stage {stageNumber - 1} Completion</div>
-                    </div>
-                  ))}
+                  {/* Summary info */}
+                  <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      <strong className="text-foreground">{stageData.completedMembers.length}</strong> of <strong className="text-foreground">{stageData.maxMembers}</strong> members have completed Stage {stageNumber - 1}
+                      {stageNumber === 2 && " (each built their 2×3 matrix of 14 members)"}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      💰 Current Earnings: <strong className="text-primary">R{stageData.earnings.toLocaleString()}</strong>
+                      {stageData.isComplete && stageData.incentive && (
+                        <> + <strong className="text-success">{stageData.incentive}</strong></>
+                      )}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-12 animate-fade-in">
                   <Users className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">No completed members in Stage {stageNumber} yet</h3>
                   <p className="text-muted-foreground mb-4">
-                    {stageNumber === 2 && "Your Stage 1 members need to complete their Stage 1 (6 members each) to appear here"}
-                    {stageNumber === 3 && "Your network members need to complete their Stage 2 to appear here"}
-                    {stageNumber === 4 && "Your network members need to complete their Stage 3 to appear here"}
+                    {stageNumber === 2 && "Your 6 Stage 1 members need to complete their Stage 1 (6 members each in 2×2 matrix) to appear here"}
+                    {stageNumber === 3 && "14 of your network members need to complete their Stage 2 (14 members each in 2×3 matrix) to appear here"}
+                    {stageNumber === 4 && "14 of your network members need to complete their Stage 3 (14 members each in 2×3 matrix) to appear here"}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     💡 Members will automatically appear here once they complete Stage {stageNumber - 1}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {stageNumber === 2 && "💵 You'll earn R200 per Stage 1 completer • Max R2,800 + Samsung Smartphone"}
+                    {stageNumber === 3 && "💵 You'll earn R250 per Stage 2 completer • Max R3,500 + R20,000 Voucher"}
+                    {stageNumber === 4 && "💵 You'll earn R1,000 per Stage 3 completer • Max R14,000 + R100,000 Voucher"}
                   </p>
                 </div>
               )
