@@ -400,23 +400,44 @@ const MultiStepRegistration = () => {
 
               {step === 2 && (
                 <>
+                  <div className="space-y-3 p-4 bg-primary/5 rounded-lg border border-primary/20 mb-4">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2">
+                      <CreditCard className="h-5 w-5 text-primary" />
+                      How to Get Your E-Pin
+                    </h3>
+                    <ol className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex gap-2">
+                        <span className="font-semibold text-primary">1.</span>
+                        <span>Buy a R250 1voucher at any retail store (Pep, Shoprite, Boxer, Game, Makro, Pick n Pay)</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-semibold text-primary">2.</span>
+                        <span>Send the 1voucher code to Admin via WhatsApp</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="font-semibold text-primary">3.</span>
+                        <span>Admin will send you an E-Pin to complete your registration</span>
+                      </li>
+                    </ol>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="epin" className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4" />
-                      Voucher E-Pin Code *
+                      Enter E-Pin from Admin *
                     </Label>
                     <Input
                       id="epin"
                       name="epin"
                       type="text"
-                      placeholder="Enter your R250 voucher code"
+                      placeholder="Enter E-Pin received from Admin"
                       value={formData.epin}
                       onChange={handleInputChange}
                       required
                       className="h-11 font-mono text-center text-lg"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Enter the voucher code you purchased for R250 at retail stores (Pep, Shoprite, Boxer, Game, Makro, Pick n Pay)
+                      Insert the E-Pin you received from Admin after sending your R250 1voucher code
                     </p>
                   </div>
 

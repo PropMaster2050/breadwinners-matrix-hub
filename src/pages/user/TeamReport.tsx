@@ -7,15 +7,48 @@ import { useAuth } from '@/hooks/useAuth';
 const TeamReport = () => {
   const { user } = useAuth();
 
-  // Get user's downlines from stored data
-  const getUserDownlines = () => {
+  // Get ALL users in the network tree recursively (including grandchildren, great-grandchildren, etc.)
+  const getAllNetworkMembers = () => {
     if (!user) return [];
     const storedUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
     const currentUser = storedUsers.find((u: any) => u.memberId === user.memberId);
-    return currentUser?.downlines || [];
+    
+    const allMembers: any[] = [];
+    
+    // Recursive function to get all downlines
+    const getDownlinesRecursively = (memberDownlines: any[], level: number = 1) => {
+      memberDownlines.forEach((downline: any) => {
+        const fullDownline = storedUsers.find((u: any) => u.memberId === downline.memberId);
+        if (fullDownline) {
+          // Calculate stage based on total recruits (6 members = Stage 1 complete, etc.)
+          const totalRecruits = (fullDownline.directRecruits || 0) + (fullDownline.totalRecruits || 0);
+          let stage = 1;
+          if (totalRecruits >= 6) stage = 2;
+          if (totalRecruits >= 84) stage = 3;
+          if (totalRecruits >= 252) stage = 4;
+          
+          allMembers.push({
+            ...fullDownline,
+            level,
+            stage
+          });
+          
+          // Get their downlines recursively
+          if (fullDownline.downlines && fullDownline.downlines.length > 0) {
+            getDownlinesRecursively(fullDownline.downlines, level + 1);
+          }
+        }
+      });
+    };
+    
+    if (currentUser?.downlines) {
+      getDownlinesRecursively(currentUser.downlines);
+    }
+    
+    return allMembers;
   };
 
-  const downlines = getUserDownlines();
+  const allNetworkMembers = getAllNetworkMembers();
 
   return (
     <div className="space-y-6">
@@ -32,7 +65,7 @@ const TeamReport = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{downlines.length}</div>
+            <div className="text-2xl font-bold">{allNetworkMembers.length}</div>
             <p className="text-xs text-muted-foreground">
               Direct recruits under you
             </p>
@@ -45,7 +78,7 @@ const TeamReport = () => {
             <UserCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{downlines.filter(d => d.isActive).length}</div>
+            <div className="text-2xl font-bold">{allNetworkMembers.filter(m => m.isActive).length}</div>
             <p className="text-xs text-muted-foreground">
               Currently active members
             </p>
@@ -88,9 +121,9 @@ const TeamReport = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {downlines.length > 0 ? (
+          {allNetworkMembers.length > 0 ? (
             <div className="space-y-4">
-              {downlines.map((member: any, index: number) => (
+              {allNetworkMembers.map((member: any, index: number) => (
                 <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center space-x-4">
                     <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -100,16 +133,16 @@ const TeamReport = () => {
                     </div>
                     <div>
                       <p className="font-medium">{member.fullName}</p>
-                      <p className="text-sm text-muted-foreground">ID: {member.memberId}</p>
+                      <p className="text-sm text-muted-foreground">ID: {member.memberId} • Level {member.level}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex items-center gap-2">
+                    <Badge variant="outline" className="bg-primary/5">
+                      Stage {member.stage}
+                    </Badge>
                     <Badge variant={member.isActive ? "default" : "secondary"}>
                       {member.isActive ? "Active" : "Pending"}
                     </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Joined: {new Date(member.joinDate).toLocaleDateString()}
-                    </p>
                   </div>
                 </div>
               ))}

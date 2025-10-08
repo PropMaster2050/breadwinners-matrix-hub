@@ -1,7 +1,6 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Users, Award } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/hooks/useAuth';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 const IncomeReport = () => {
   const { user } = useAuth();
@@ -80,115 +79,54 @@ const IncomeReport = () => {
     }
   ];
 
+  // Prepare chart data
+  const chartData = stageData.map(stage => ({
+    name: `Stage ${stage.stage}`,
+    earnings: stage.earned,
+    status: stage.status
+  }));
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--primary) / 0.8)', 'hsl(var(--primary) / 0.6)', 'hsl(var(--primary) / 0.4)'];
+
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">My Income Report</h1>
-        <p className="text-muted-foreground">Track your earnings per stage with R100 per member</p>
+        <p className="text-muted-foreground">Earnings per stage visualization</p>
       </div>
 
-      {/* Income Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Earnings</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">R{(incomeData.directRecruits + incomeData.spillovers) * 100}</div>
-            <p className="text-xs text-muted-foreground">
-              R100 per recruit
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">This Month</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">R{incomeData.monthlyIncome.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              Current month income
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Recruits</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{incomeData.directRecruits + incomeData.spillovers}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all stages
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Stage Breakdown */}
+      {/* Earnings Chart */}
       <Card>
         <CardHeader>
           <CardTitle>Earnings by Stage</CardTitle>
-          <CardDescription>
-            R100 per member for all stages
-          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {stageData.map((stage) => (
-              <div key={stage.stage} className="p-4 rounded-lg border bg-card">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                      <span className="text-sm font-semibold text-primary">{stage.stage}</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold">Stage {stage.stage}</h3>
-                      <p className="text-sm text-muted-foreground">{stage.description}</p>
-                    </div>
-                  </div>
-                  <Badge 
-                    variant={
-                      stage.status === "Completed" ? "default" : 
-                      stage.status === "In Progress..." ? "secondary" : 
-                      "outline"
-                    }
-                  >
-                    {stage.status}
-                  </Badge>
-                </div>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Progress</p>
-                    <p className="font-semibold">{stage.members} / {stage.required}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Earned</p>
-                    <p className="font-semibold">R{stage.earned.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <p className="font-semibold capitalize">{stage.status}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {incomeData.totalEarnings === 0 && (
-            <div className="text-center py-12 mt-8 border-t">
-              <TrendingUp className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Start Earning Today!</h3>
-              <p className="text-muted-foreground">
-                Recruit 2 direct members (who each recruit 2) to earn R100 per member and complete Stage 1 (R600 total).
-              </p>
-            </div>
-          )}
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis 
+                dataKey="name" 
+                className="text-muted-foreground"
+              />
+              <YAxis 
+                className="text-muted-foreground"
+                tickFormatter={(value) => `R${value}`}
+              />
+              <Tooltip 
+                formatter={(value: number) => [`R${value.toLocaleString()}`, 'Earned']}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+              />
+              <Bar dataKey="earnings" radius={[8, 8, 0, 0]}>
+                {chartData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
     </div>
