@@ -94,23 +94,6 @@ const MultiStepRegistration = () => {
     e.preventDefault();
     if (step !== 2 || !formData.epin) return;
     
-    // Check if username already exists (case-insensitive)
-    const existingUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
-    const usernameExists = existingUsers.some((u: any) => 
-      u.username.toLowerCase() === formData.username.toLowerCase()
-    );
-    
-    if (usernameExists) {
-      const { toast } = await import("@/hooks/use-toast");
-      toast({
-        title: "Username Already Exists",
-        description: "This username is already taken. Please choose a different username.",
-        variant: "destructive",
-      });
-      setStep(1); // Go back to step 1 to change username
-      return;
-    }
-    
     setIsLoading(true);
     
     try {

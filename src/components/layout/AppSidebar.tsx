@@ -46,6 +46,8 @@ const networkStages = [
   { title: "Stage 2", url: "/network/stage/2", icon: TreePine },
   { title: "Stage 3", url: "/network/stage/3", icon: TreePine },
   { title: "Stage 4", url: "/network/stage/4", icon: TreePine },
+  { title: "Stage 5", url: "/network/stage/5", icon: TreePine },
+  { title: "Stage 6", url: "/network/stage/6", icon: TreePine },
 ];
 
 const otherMenuItems = [

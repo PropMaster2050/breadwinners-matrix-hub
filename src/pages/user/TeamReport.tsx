@@ -1,54 +1,65 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, UserCheck, Calendar, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from "@/integrations/supabase/client";
 
 const TeamReport = () => {
   const { user } = useAuth();
+  const [allNetworkMembers, setAllNetworkMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Get ALL users in the network tree recursively (including grandchildren, great-grandchildren, etc.)
-  const getAllNetworkMembers = () => {
-    if (!user) return [];
-    const storedUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
-    const currentUser = storedUsers.find((u: any) => u.memberId === user.memberId);
-    
-    const allMembers: any[] = [];
-    
-    // Recursive function to get all downlines
-    const getDownlinesRecursively = (memberDownlines: any[], level: number = 1) => {
-      memberDownlines.forEach((downline: any) => {
-        const fullDownline = storedUsers.find((u: any) => u.memberId === downline.memberId);
-        if (fullDownline) {
-          // Calculate stage based on total recruits (6 members = Stage 1 complete, etc.)
-          const totalRecruits = (fullDownline.directRecruits || 0) + (fullDownline.totalRecruits || 0);
-          let stage = 1;
-          if (totalRecruits >= 6) stage = 2;
-          if (totalRecruits >= 84) stage = 3;
-          if (totalRecruits >= 252) stage = 4;
-          
-          allMembers.push({
-            ...fullDownline,
-            level,
-            stage
-          });
-          
-          // Get their downlines recursively
-          if (fullDownline.downlines && fullDownline.downlines.length > 0) {
-            getDownlinesRecursively(fullDownline.downlines, level + 1);
-          }
+  useEffect(() => {
+    const fetchNetworkMembers = async () => {
+      if (!user?.id) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch all profiles with their network tree and wallet data
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select(`
+            *,
+            wallets(*),
+            network_tree(*)
+          `);
+
+        if (error) {
+          console.error('Error fetching network members:', error);
+          return;
         }
-      });
-    };
-    
-    if (currentUser?.downlines) {
-      getDownlinesRecursively(currentUser.downlines);
-    }
-    
-    return allMembers;
-  };
 
-  const allNetworkMembers = getAllNetworkMembers();
+        if (profiles) {
+          // Transform profiles to match the expected format
+          const members = profiles
+            .filter((profile: any) => {
+              // Include users who have the current user as parent in network tree
+              return profile.network_tree?.some((nt: any) => nt.parent_id === user.id);
+            })
+            .map((profile: any) => ({
+              fullName: profile.full_name,
+              memberId: profile.id,
+              level: profile.network_tree?.[0]?.level || 1,
+              stage: profile.network_tree?.[0]?.stage || 1,
+              isActive: true,
+              joinDate: profile.created_at,
+              directRecruits: profile.direct_recruits,
+              totalRecruits: profile.total_recruits
+            }));
+
+          setAllNetworkMembers(members);
+        }
+      } catch (error) {
+        console.error('Error in fetchNetworkMembers:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchNetworkMembers();
+  }, [user?.id]);
 
   return (
     <div className="space-y-6">
@@ -121,22 +132,27 @@ const TeamReport = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {allNetworkMembers.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">Loading team members...</p>
+            </div>
+          ) : allNetworkMembers.length > 0 ? (
             <div className="space-y-4">
               {allNetworkMembers.map((member: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg gap-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
                       <span className="text-sm font-medium text-primary">
                         {member.fullName.charAt(0)}
                       </span>
                     </div>
-                    <div>
-                      <p className="font-medium">{member.fullName}</p>
-                      <p className="text-sm text-muted-foreground">ID: {member.memberId} • Level {member.level}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{member.fullName}</p>
+                      <p className="text-sm text-muted-foreground truncate">ID: {member.memberId}</p>
+                      <p className="text-xs text-muted-foreground">Level {member.level}</p>
                     </div>
                   </div>
-                  <div className="text-right flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                     <Badge variant="outline" className="bg-primary/5">
                       Stage {member.stage}
                     </Badge>

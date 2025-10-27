@@ -69,6 +69,7 @@ interface RegisterData {
   gender?: string;
   sponsorId?: string;
   epin: string;
+  idNumber?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -90,32 +91,110 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // Admin login using Supabase SQL function
+      // Try Supabase authentication first
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: username, // Try as email first
+        password: password,
+      });
+
+      if (!error && data.user) {
+        // Check if user has admin role
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .single();
+
+        if (roleData) {
+          // User is admin
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('user_id', data.user.id)
+            .single();
+
+          if (profileData) {
+            const adminUser: User = {
+              id: data.user.id,
+              memberId: profileData.id,
+              fullName: profileData.full_name,
+              username: profileData.username,
+              email: profileData.email,
+              mobile: profileData.phone || '',
+              level: 1,
+              stage: 1,
+              earnings: 0,
+              directRecruits: 0,
+              totalRecruits: 0,
+              isActive: true,
+              joinDate: profileData.created_at,
+              wallets: { eWallet: 0, registrationWallet: 0, incentiveWallet: 0 }
+            };
+            setUser(adminUser);
+            localStorage.setItem('breadwinners_user', JSON.stringify(adminUser));
+            toast({ title: "Welcome back, Administrator!" });
+            navigate('/admin');
+            return true;
+          }
+        }
+
+        // Regular user login
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*, wallets(*), network_tree(*)')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (profileData) {
+          const wallets = Array.isArray(profileData.wallets) ? profileData.wallets[0] : null;
+          const networkTree = Array.isArray(profileData.network_tree) ? profileData.network_tree[0] : null;
+          
+          const userData: User = {
+            id: data.user.id,
+            memberId: profileData.id,
+            fullName: profileData.full_name,
+            username: profileData.username,
+            email: profileData.email,
+            mobile: profileData.phone || '',
+            level: networkTree?.level || 1,
+            stage: networkTree?.stage || 1,
+            earnings: wallets?.total_earned || 0,
+            directRecruits: profileData.direct_recruits || 0,
+            totalRecruits: profileData.total_recruits || 0,
+            isActive: true,
+            joinDate: profileData.created_at,
+            wallets: {
+              eWallet: wallets?.e_wallet_balance || 0,
+              registrationWallet: wallets?.registration_wallet_balance || 250,
+              incentiveWallet: wallets?.incentive_wallet_balance || 0
+            }
+          };
+          setUser(userData);
+          localStorage.setItem('breadwinners_user', JSON.stringify(userData));
+          toast({ title: `Welcome back, ${profileData.full_name}!` });
+          navigate('/dashboard');
+          return true;
+        }
+      }
+
+      // Fallback to hardcoded admin for initial setup
       if (username === 'admin' && password === 'admin10') {
-        const { data: promoteData, error: promoteError } = await supabase.rpc('promote_user_to_admin', { 
-          user_email: 'admin@breadwinners.com' 
-        });
-
-        if (promoteError) console.log('Admin promote error:', promoteError.message);
-
         const adminUser: User = {
           id: 'admin',
           memberId: 'ADMIN001',
           fullName: 'System Administrator',
           username: 'admin',
+          email: 'admin@breadwinners.com',
           mobile: '+27123456789',
-          level: 8,
-          stage: 5,
+          level: 1,
+          stage: 1,
           earnings: 0,
           directRecruits: 0,
           totalRecruits: 0,
           isActive: true,
           joinDate: new Date().toISOString(),
-          wallets: {
-            eWallet: 0,
-            registrationWallet: 0,
-            incentiveWallet: 0
-          }
+          wallets: { eWallet: 0, registrationWallet: 0, incentiveWallet: 0 }
         };
         setUser(adminUser);
         localStorage.setItem('breadwinners_user', JSON.stringify(adminUser));
@@ -124,32 +203,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return true;
       }
 
-      // Regular user login - check against stored users
-      const storedUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
-      const foundUser = storedUsers.find((u: any) => 
-        u.username === username && u.password === password
-      );
-
-      if (foundUser) {
-        const { password: _, ...userWithoutPassword } = foundUser;
-        setUser(userWithoutPassword);
-        localStorage.setItem('breadwinners_user', JSON.stringify(userWithoutPassword));
-        toast({ title: `Welcome back, ${foundUser.fullName}!` });
-        navigate('/dashboard');
-        return true;
-      }
-
-      toast({ 
-        title: "Login failed", 
+      toast({
+        title: "Login failed",
         description: "Invalid username or password",
-        variant: "destructive" 
+        variant: "destructive"
       });
       return false;
     } catch (error) {
-      toast({ 
-        title: "Login error", 
+      console.error('Login error:', error);
+      toast({
+        title: "Login failed",
         description: "An error occurred during login",
-        variant: "destructive" 
+        variant: "destructive"
       });
       return false;
     }
@@ -197,7 +262,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       // Sign up user in Supabase Auth to centralize accounts
       const redirectUrl = `${window.location.origin}/login`;
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: userData.email || '',
         password: userData.password,
         options: {
@@ -206,7 +271,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             full_name: userData.fullName,
             username: userData.username,
             phone: userData.mobile,
-            referrer_code: userData.sponsorId || null
+            id_number: userData.idNumber,
+            referrer_code: userData.sponsorId || null,
+            own_referral_code: `BW${Math.floor(100000 + Math.random() * 900000)}`,
+            physical_address: userData.physicalAddress,
+            province: userData.province,
+            age: userData.age,
+            gender: userData.gender
           }
         }
       });
