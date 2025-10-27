@@ -42,6 +42,26 @@ const rewardsData = [
     color: "from-gray-600 to-gray-800",
     icon: <Banknote className="h-5 w-5" />,
     bonus: "R100,000 Family Card Voucher or Cash"
+  },
+  {
+    stage: 5,
+    title: "Stage 5 - Diamond",
+    requirement: "6 Members Complete Stage 4",
+    reward: "R84,000", 
+    calculation: "R14,000 x 6",
+    color: "from-cyan-400 to-blue-600",
+    icon: <Gift className="h-5 w-5" />,
+    bonus: "R500,000 Family Card Voucher or Cash"
+  },
+  {
+    stage: 6,
+    title: "Stage 6 - Elite",
+    requirement: "6 Members Complete Stage 5",
+    reward: "R504,000", 
+    calculation: "R84,000 x 6",
+    color: "from-purple-500 to-pink-600",
+    icon: <Banknote className="h-5 w-5" />,
+    bonus: "R2,000,000 Family Card Voucher or Cash"
   }
 ];
 
@@ -49,7 +69,7 @@ export const RewardsStructure = () => {
   return (
     <div className="space-y-4">
       <h3 className="text-xl font-bold text-foreground mb-4">Rewards Structure</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {rewardsData.map((stage) => (
           <Card key={stage.stage} className="border-border/50 hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
