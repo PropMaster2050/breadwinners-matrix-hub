@@ -348,9 +348,9 @@ const MultiStepRegistration = () => {
                         id="age"
                         name="age"
                         type="number"
-                        placeholder="18+"
-                        min="18"
-                        max="100"
+                        placeholder="Enter your age"
+                        min="1"
+                        max="140"
                         value={formData.age}
                         onChange={handleInputChange}
                         required

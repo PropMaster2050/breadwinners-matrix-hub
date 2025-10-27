@@ -18,11 +18,13 @@ const IncentiveWallet = () => {
     claimedRewards: []
   };
 
-  // Calculate actual matrix progression for incentives
+  // Calculate actual matrix progression for incentives (all 2x2 = 6 members per stage)
   const stage1Complete = user.directRecruits >= 2 && user.totalRecruits >= 6;
-  const stage2Complete = user.totalRecruits >= 84;
-  const stage3Complete = user.totalRecruits >= 168;
-  const stage4Complete = user.totalRecruits >= 336;
+  const stage2Complete = stage1Complete && user.totalRecruits >= 12; // Stage 1 (6) + Stage 2 (6)
+  const stage3Complete = stage2Complete && user.totalRecruits >= 18; // Stage 1 (6) + Stage 2 (6) + Stage 3 (6)
+  const stage4Complete = stage3Complete && user.totalRecruits >= 24; // + Stage 4 (6)
+  const stage5Complete = stage4Complete && user.totalRecruits >= 30; // + Stage 5 (6)
+  const stage6Complete = stage5Complete && user.totalRecruits >= 36; // + Stage 6 (6)
 
   const incentiveStructure = [
     {
@@ -31,35 +33,53 @@ const IncentiveWallet = () => {
       reward: "R600 Cash Reward",
       icon: Gift,
       status: stage1Complete ? "unlocked" : "locked",
-      current: user.totalRecruits >= 6 ? 6 : user.totalRecruits,
+      current: Math.min(user.totalRecruits, 6),
       max: 6
     },
     {
       stage: 2,
-      requirement: "14 downlines × Stage 1 complete (84 members)",
-      reward: "Samsung Smartphone",
+      requirement: "6 Stage 1 completers",
+      reward: "R1,200 + Samsung Smartphone",
       icon: Smartphone,
       status: stage2Complete ? "unlocked" : "locked",
-      current: stage1Complete ? Math.min(user.totalRecruits, 84) : 0,
-      max: 84
+      current: stage1Complete ? Math.min(user.totalRecruits - 6, 6) : 0,
+      max: 6
     },
     {
       stage: 3,
-      requirement: "168 indirect members",
-      reward: "R20,000 Voucher or Cash",
+      requirement: "6 Stage 2 completers",
+      reward: "R1,500 + R10,000 Voucher",
       icon: Gift,
       status: stage3Complete ? "unlocked" : "locked",
-      current: stage2Complete ? Math.min(user.totalRecruits, 168) : 0,
-      max: 168
+      current: stage2Complete ? Math.min(user.totalRecruits - 12, 6) : 0,
+      max: 6
     },
     {
       stage: 4,
-      requirement: "336 indirect members",
-      reward: "R100,000 Voucher or Cash",
+      requirement: "6 Stage 3 completers",
+      reward: "R6,000 + R25,000 Voucher",
       icon: Gift,
       status: stage4Complete ? "unlocked" : "locked",
-      current: stage3Complete ? Math.min(user.totalRecruits, 336) : 0,
-      max: 336
+      current: stage3Complete ? Math.min(user.totalRecruits - 18, 6) : 0,
+      max: 6
+    },
+    {
+      stage: 5,
+      requirement: "6 Stage 4 completers",
+      reward: "R9,000 + R50,000 Voucher",
+      icon: Gift,
+      status: stage5Complete ? "unlocked" : "locked",
+      current: stage4Complete ? Math.min(user.totalRecruits - 24, 6) : 0,
+      max: 6
+    },
+    {
+      stage: 6,
+      requirement: "6 Stage 5 completers",
+      reward: "R12,000 + R150,000 Voucher",
+      icon: Gift,
+      status: stage6Complete ? "unlocked" : "locked",
+      current: stage5Complete ? Math.min(user.totalRecruits - 30, 6) : 0,
+      max: 6
     }
   ];
 
@@ -218,10 +238,12 @@ const IncentiveWallet = () => {
                 Complete stages by recruiting members to unlock and claim amazing incentive rewards.
               </p>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p>• Stage 1: R600 Cash Reward (6 members)</p>
-                <p>• Stage 2: Samsung Smartphone (84 members)</p>
-                <p>• Stage 3: R20,000 Voucher/Cash (168 members)</p>
-                <p>• Stage 4: R100,000 Voucher/Cash (336 members)</p>
+                <p>• Stage 1: R600 Cash (6 members)</p>
+                <p>• Stage 2: R1,200 + Samsung Smartphone (6 Stage 1 completers)</p>
+                <p>• Stage 3: R1,500 + R10,000 Voucher (6 Stage 2 completers)</p>
+                <p>• Stage 4: R6,000 + R25,000 Voucher (6 Stage 3 completers)</p>
+                <p>• Stage 5: R9,000 + R50,000 Voucher (6 Stage 4 completers)</p>
+                <p>• Stage 6: R12,000 + R150,000 Voucher (6 Stage 5 completers)</p>
               </div>
             </div>
           )}
