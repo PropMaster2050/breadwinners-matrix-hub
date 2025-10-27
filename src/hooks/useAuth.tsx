@@ -90,8 +90,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // Admin login
+      // Admin login using Supabase SQL function
       if (username === 'admin' && password === 'admin10') {
+        const { data: promoteData, error: promoteError } = await supabase.rpc('promote_user_to_admin', { 
+          user_email: 'admin@breadwinners.com' 
+        });
+
+        if (promoteError) console.log('Admin promote error:', promoteError.message);
+
         const adminUser: User = {
           id: 'admin',
           memberId: 'ADMIN001',
@@ -185,6 +191,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           title: "Registration failed", 
           description: "Username already exists",
           variant: "destructive" 
+        });
+        return false;
+      }
+
+      // Sign up user in Supabase Auth to centralize accounts
+      const redirectUrl = `${window.location.origin}/login`;
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: userData.email || '',
+        password: userData.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: userData.fullName,
+            username: userData.username,
+            phone: userData.mobile,
+            referrer_code: userData.sponsorId || null
+          }
+        }
+      });
+
+      if (signUpError) {
+        toast({
+          title: "Registration failed",
+          description: signUpError.message || "Could not create account",
+          variant: "destructive"
         });
         return false;
       }
