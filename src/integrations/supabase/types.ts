@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      commissions: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid: boolean
+          paid_at: string | null
+          recruit_user_id: string
+          stage_number: number
+          transaction_id: string | null
+          upline_user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          paid?: boolean
+          paid_at?: string | null
+          recruit_user_id: string
+          stage_number: number
+          transaction_id?: string | null
+          upline_user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid?: boolean
+          paid_at?: string | null
+          recruit_user_id?: string
+          stage_number?: number
+          transaction_id?: string | null
+          upline_user_id?: string
+        }
+        Relationships: []
+      }
       epins: {
         Row: {
           code: string
@@ -115,7 +151,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          current_stage: number
           direct_recruits: number
           email: string
           full_name: string
@@ -130,7 +168,9 @@ export type Database = {
           username: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          current_stage?: number
           direct_recruits?: number
           email: string
           full_name: string
@@ -145,7 +185,9 @@ export type Database = {
           username: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          current_stage?: number
           direct_recruits?: number
           email?: string
           full_name?: string
@@ -158,6 +200,33 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
+        }
+        Relationships: []
+      }
+      stage_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          recruits_count: number
+          stage_number: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          recruits_count?: number
+          stage_number: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          recruits_count?: number
+          stage_number?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -284,6 +353,10 @@ export type Database = {
       is_in_user_branch: {
         Args: { target_user_id: string; viewer_id: string }
         Returns: boolean
+      }
+      process_stage_completion: {
+        Args: { _stage_number: number; _user_id: string }
+        Returns: Json
       }
       promote_user_to_admin: { Args: { user_email: string }; Returns: boolean }
     }
