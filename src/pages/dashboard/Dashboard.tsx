@@ -27,12 +27,12 @@ const Dashboard = () => {
 
   if (!user) return null;
 
-  const copyMemberId = () => {
-    navigator.clipboard.writeText(user.memberId);
+  const copyReferralCode = () => {
+    navigator.clipboard.writeText(user.ownReferralCode || '');
     setCopied(true);
     toast({
       title: "Copied!",
-      description: `Member ID ${user.memberId} copied to clipboard`,
+      description: `Referral code ${user.ownReferralCode} copied to clipboard`,
     });
     setTimeout(() => setCopied(false), 2000);
   };
@@ -79,17 +79,17 @@ const Dashboard = () => {
           Username: {user.username}
         </Badge>
         
-        {/* Prominent Member ID with Copy Button */}
+        {/* Prominent Referral Code with Copy Button */}
         <div className="flex items-center justify-center gap-2">
           <div className="bg-primary/10 border-2 border-primary/30 rounded-lg px-6 py-3 flex items-center gap-3">
             <div className="text-left">
-              <p className="text-xs text-muted-foreground font-medium">Your Member ID</p>
-              <p className="text-2xl font-bold text-primary tracking-wide">{user.memberId}</p>
+              <p className="text-xs text-muted-foreground font-medium">Your Referral Code</p>
+              <p className="text-2xl font-bold text-primary tracking-wide">{user.ownReferralCode}</p>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              onClick={copyMemberId}
+              onClick={copyReferralCode}
               className="hover:bg-primary/20"
             >
               {copied ? (
@@ -100,7 +100,7 @@ const Dashboard = () => {
             </Button>
           </div>
         </div>
-        <p className="text-xs text-muted-foreground">Share this ID with people you recruit</p>
+        <p className="text-xs text-muted-foreground">Share this code with people you recruit</p>
       </div>
 
       {/* Referral Link - Prominent Display */}
