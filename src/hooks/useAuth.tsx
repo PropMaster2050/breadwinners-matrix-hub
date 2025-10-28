@@ -173,8 +173,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     });
 
+    // Real-time wallet updates - refresh user when wallet balance changes
+    const walletChannel = supabase
+      .channel('wallet-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'wallets'
+        },
+        (payload) => {
+          // Only refresh if it's the current user's wallet
+          const currentUserId = localStorage.getItem('breadwinners_user');
+          if (currentUserId) {
+            const userData = JSON.parse(currentUserId);
+            if (payload.new.user_id === userData.id) {
+              hydrateUserFromSupabase(userData.id);
+            }
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       subscription.unsubscribe();
+      supabase.removeChannel(walletChannel);
     };
   }, []);
 
