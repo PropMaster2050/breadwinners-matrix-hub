@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const baseUser: User = {
         id: userId,
-        memberId: profileData.id,
+        memberId: profileData.own_referral_code,
         fullName: profileData.full_name,
         username: profileData.username,
         email: profileData.email,
