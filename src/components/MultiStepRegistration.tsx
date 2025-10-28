@@ -78,6 +78,15 @@ const MultiStepRegistration = () => {
            formData.transactionPin.length === 4;
   };
 
+  const getValidationErrors = () => {
+    const errors = [];
+    if (formData.password.length < 6) errors.push("Password must be at least 6 characters");
+    if (formData.transactionPin.length !== 4) errors.push("Transaction PIN must be exactly 4 digits");
+    if (formData.password !== formData.confirmPassword) errors.push("Passwords don't match");
+    if (formData.transactionPin !== formData.confirmTransactionPin) errors.push("Transaction PINs don't match");
+    return errors;
+  };
+
   const handleNext = () => {
     if (step === 1 && validateStep1() && validatePasswords()) {
       setStep(2);
@@ -369,6 +378,15 @@ const MultiStepRegistration = () => {
                     />
                   </div>
 
+                  {!validateStep1() || !validatePasswords() ? (
+                    <div className="space-y-2">
+                      {getValidationErrors().map((error, index) => (
+                        <p key={index} className="text-sm text-destructive">{error}</p>
+                      ))}
+                      {!validateStep1() && <p className="text-sm text-destructive">Please fill in all required fields</p>}
+                    </div>
+                  ) : null}
+                  
                   <Button
                     type="button"
                     onClick={handleNext}
