@@ -25,6 +25,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [epinQuantity, setEpinQuantity] = useState(10);
   const [generatedEPins, setGeneratedEPins] = useState<EPin[]>([]);
+  const [totalMembers, setTotalMembers] = useState<number>(0);
 
   if (!isAdmin) return null;
 
@@ -90,6 +91,18 @@ const AdminDashboard = () => {
     }
   };
 
+  const loadMembersCount = async () => {
+    try {
+      const { error, count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      if (error) throw error;
+      setTotalMembers(count || 0);
+    } catch (error: any) {
+      toast.error(`Failed to load member count: ${error.message}`);
+    }
+  };
+
   // Download e-pins as CSV
   const handleDownloadCSV = () => {
     if (generatedEPins.length === 0) {
@@ -121,9 +134,10 @@ const AdminDashboard = () => {
     toast.success('E-pins downloaded successfully');
   };
 
-  // Load e-pins on component mount
+  // Load stats on component mount
   useEffect(() => {
     loadEPins();
+    loadMembersCount();
   }, []);
 
   const totalEPins = generatedEPins.length;
@@ -154,7 +168,7 @@ const AdminDashboard = () => {
             <Users className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{totalMembers}</div>
             <p className="text-xs text-muted-foreground">Registered users</p>
           </CardContent>
         </Card>
