@@ -30,44 +30,67 @@ const UserManagement = () => {
       if (!isAdmin) return;
 
       try {
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select(`
-            *,
-            wallets(*),
-            network_tree(*)
-          `);
+        // Fetch all data separately
+        const [profilesResult, walletsResult, networkResult] = await Promise.all([
+          supabase.from('profiles').select('*'),
+          supabase.from('wallets').select('*'),
+          supabase.from('network_tree').select('*')
+        ]);
 
-        if (error) {
-          console.error('Error fetching users:', error);
-          toast.error(`Failed to load users: ${error.message}`);
+        if (profilesResult.error) {
+          console.error('Error fetching profiles:', profilesResult.error);
+          toast.error(`Failed to load profiles: ${profilesResult.error.message}`);
           return;
         }
 
-        if (profiles) {
-          // Transform Supabase profiles to match User interface
-          const transformedUsers = profiles.map((profile: any) => ({
+        if (walletsResult.error) {
+          console.error('Error fetching wallets:', walletsResult.error);
+          toast.error(`Failed to load wallets: ${walletsResult.error.message}`);
+          return;
+        }
+
+        if (networkResult.error) {
+          console.error('Error fetching network:', networkResult.error);
+          toast.error(`Failed to load network data: ${networkResult.error.message}`);
+          return;
+        }
+
+        const profiles = profilesResult.data || [];
+        const wallets = walletsResult.data || [];
+        const networkTree = networkResult.data || [];
+
+        // Create lookup maps
+        const walletsMap = new Map(wallets.map(w => [w.user_id, w]));
+        const networkMap = new Map(networkTree.map(n => [n.user_id, n]));
+
+        // Transform Supabase profiles to match User interface
+        const transformedUsers = profiles.map((profile: any) => {
+          const userWallet = walletsMap.get(profile.user_id);
+          const userNetwork = networkMap.get(profile.user_id);
+
+          return {
             id: profile.user_id,
             memberId: profile.id,
             fullName: profile.full_name,
             username: profile.username,
             mobile: profile.phone,
             email: profile.email,
-            level: profile.network_tree?.[0]?.level || 1,
-            stage: profile.network_tree?.[0]?.stage || 1,
-            earnings: profile.wallets?.[0]?.total_earned || 0,
+            level: userNetwork?.level || 1,
+            stage: userNetwork?.stage || 1,
+            earnings: userWallet?.total_earned || 0,
             directRecruits: profile.direct_recruits,
             totalRecruits: profile.total_recruits,
             isActive: true,
             joinDate: profile.created_at,
             wallets: {
-              eWallet: profile.wallets?.[0]?.e_wallet_balance || 0,
-              registrationWallet: profile.wallets?.[0]?.registration_wallet_balance || 0,
-              incentiveWallet: profile.wallets?.[0]?.incentive_wallet_balance || 0
+              eWallet: userWallet?.e_wallet_balance || 0,
+              registrationWallet: userWallet?.registration_wallet_balance || 0,
+              incentiveWallet: userWallet?.incentive_wallet_balance || 0
             }
-          }));
-          setAllUsers(transformedUsers);
-        }
+          };
+        });
+        
+        setAllUsers(transformedUsers);
       } catch (err: any) {
         console.error('Unexpected error loading users:', err);
         toast.error('Failed to load users. Please refresh the page.');
