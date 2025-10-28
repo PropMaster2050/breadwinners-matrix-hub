@@ -92,9 +92,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      // Try Supabase authentication first
+      let email = username;
+      
+      // If input doesn't look like email, look up email from profiles
+      if (!username.includes('@')) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('username', username)
+          .maybeSingle();
+        
+        if (profileData?.email) {
+          email = profileData.email;
+        }
+      }
+      
+      // Try Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: username, // Try as email first
+        email: email,
         password: password,
       });
 
@@ -321,6 +336,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           sponsor.earnings = sponsorStage1Count * 100;
           sponsor.wallets.eWallet = sponsorStage1Count * 100;
           
+          // Update sponsor's wallet in Supabase
+          const sponsorProfile = await supabase.from('profiles').select('user_id').eq('id', sponsor.memberId).maybeSingle();
+          if (sponsorProfile.data?.user_id) {
+            await supabase.from('wallets').update({
+              e_wallet_balance: sponsor.wallets.eWallet,
+              total_earned: sponsor.earnings
+            }).eq('user_id', sponsorProfile.data.user_id);
+            
+            await supabase.from('profiles').update({
+              direct_recruits: sponsor.directRecruits,
+              total_recruits: sponsor.totalRecruits
+            }).eq('user_id', sponsorProfile.data.user_id);
+          }
+          
           // Check if sponsor completed Stage 1 (6 members)
           if (sponsorStage1Count === 6 && sponsor.stage === 1) {
             sponsor.stage = 2; // Auto-promote to Stage 2
@@ -371,6 +400,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               // Check if grandparent completed Stage 1
               if (gpStage1Count === 6 && grandparent.stage === 1) {
                 grandparent.stage = 2;
+              }
+              
+              // Update grandparent's wallet in Supabase
+              const gpProfile = await supabase.from('profiles').select('user_id').eq('id', grandparent.memberId).maybeSingle();
+              if (gpProfile.data?.user_id) {
+                await supabase.from('wallets').update({
+                  e_wallet_balance: grandparent.wallets.eWallet,
+                  total_earned: grandparent.earnings
+                }).eq('user_id', gpProfile.data.user_id);
+                
+                await supabase.from('profiles').update({
+                  total_recruits: grandparent.totalRecruits
+                }).eq('user_id', gpProfile.data.user_id);
               }
             }
           }
