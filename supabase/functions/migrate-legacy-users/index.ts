@@ -88,32 +88,45 @@ serve(async (req) => {
           continue;
         }
 
-        // Create auth user
+        // Ensure auth user exists or create one
         const tempEmail = user.email || `${user.username}@breadwinners.local`;
-        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-          email: tempEmail,
-          password: user.password,
-          email_confirm: true,
-          user_metadata: {
-            full_name: user.fullName,
-            username: user.username,
-            phone: user.mobile,
-            own_referral_code: user.memberId
-          }
-        });
+        let authUserId = '';
+        let createdNew = false;
 
-        if (authError || !authData.user) {
-          results.errors.push(`${user.username}: ${authError?.message || 'Auth failed'}`);
-          results.failed++;
-          continue;
+        // Try to find existing auth user by email to avoid duplicates on reruns
+        const { data: listed } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+        const existingAuth = listed?.users?.find((u: any) => (u.email || '').toLowerCase() === tempEmail.toLowerCase());
+
+        if (existingAuth) {
+          authUserId = existingAuth.id;
+        } else {
+          const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+            email: tempEmail,
+            password: user.password,
+            email_confirm: true,
+            user_metadata: {
+              full_name: user.fullName,
+              username: user.username,
+              phone: user.mobile,
+              own_referral_code: user.memberId
+            }
+          });
+
+          if (authError || !authData.user) {
+            results.errors.push(`${user.username}: ${authError?.message || 'Auth failed'}`);
+            results.failed++;
+            continue;
+          }
+
+          authUserId = authData.user.id;
+          createdNew = true;
         }
 
         // Create profile
         const { error: profileError } = await supabaseAdmin
           .from('profiles')
           .insert({
-            user_id: authData.user.id,
-            id: user.memberId,
+            user_id: authUserId,
             full_name: user.fullName,
             username: user.username,
             email: tempEmail,
@@ -125,6 +138,10 @@ serve(async (req) => {
           });
 
         if (profileError) {
+          // Rollback newly created auth user to avoid orphans
+          if (createdNew && authUserId) {
+            await supabaseAdmin.auth.admin.deleteUser(authUserId);
+          }
           results.errors.push(`${user.username}: ${profileError.message}`);
           results.failed++;
           continue;
@@ -134,7 +151,7 @@ serve(async (req) => {
         const { error: walletError } = await supabaseAdmin
           .from('wallets')
           .insert({
-            user_id: authData.user.id,
+            user_id: authUserId,
             e_wallet_balance: user.wallets.eWallet,
             registration_wallet_balance: user.wallets.registrationWallet,
             incentive_wallet_balance: user.wallets.incentiveWallet,
@@ -151,7 +168,7 @@ serve(async (req) => {
         await supabaseAdmin
           .from('network_tree')
           .insert({
-            user_id: authData.user.id,
+            user_id: authUserId,
             level: user.level,
             stage: user.stage,
             parent_id: null
