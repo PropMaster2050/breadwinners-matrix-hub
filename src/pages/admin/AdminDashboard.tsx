@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
-import { Settings, Users, CreditCard, MessageSquare, BarChart3, Download, Plus, UserCog } from "lucide-react";
+import { Settings, Users, CreditCard, MessageSquare, BarChart3, Download, Plus, UserCog, Database } from "lucide-react";
 import { toast } from "sonner";
 import Papa from "papaparse";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,6 +158,10 @@ const AdminDashboard = () => {
           <Button onClick={() => navigate('/admin/payouts')} variant="outline">
             <Settings className="h-4 w-4 mr-2" />
             Manage Payouts
+          </Button>
+          <Button onClick={() => navigate('/admin/legacy-migration')} variant="outline">
+            <Database className="h-4 w-4 mr-2" />
+            Migrate Legacy Users
           </Button>
           <Badge variant="destructive">Administrator</Badge>
         </div>

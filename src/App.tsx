@@ -30,6 +30,7 @@ import Notifications from "./pages/user/Notifications";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import AdminPayouts from "./pages/admin/AdminPayouts";
+import LegacyUserMigration from "./pages/admin/LegacyUserMigration";
 import StageTree from "./pages/user/StageTree";
 import NotFound from "./pages/NotFound";
 
@@ -126,6 +127,11 @@ const App = () => (
             <Route path="/admin/payouts" element={
               <ProtectedRoute adminOnly>
                 <AppLayout><AdminPayouts /></AppLayout>
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/legacy-migration" element={
+              <ProtectedRoute adminOnly>
+                <AppLayout><LegacyUserMigration /></AppLayout>
               </ProtectedRoute>
             } />
 
