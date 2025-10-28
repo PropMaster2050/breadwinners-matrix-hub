@@ -272,6 +272,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const register = async (userData: RegisterData): Promise<boolean> => {
     // Minimal, reliable flow to avoid hangs. We only validate E-PIN, create auth user, and exit.
     try {
+      console.log('Registration started', { username: userData.username });
+      
       // 1) Validate E-PIN exists (read-only). Use maybeSingle to avoid throwing.
       const epinCode = (userData.epin || '').trim().toUpperCase();
       if (!epinCode) {
@@ -279,23 +281,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
+      console.log('Validating E-PIN:', epinCode);
       const { data: epinRow, error: epinErr } = await supabase
         .from('epins')
         .select('*')
         .eq('code', epinCode)
         .maybeSingle();
 
+      console.log('E-PIN validation result:', { epinRow, epinErr });
+
       if (epinErr || !epinRow) {
+        console.error('E-PIN error:', epinErr);
         toast({ title: 'Invalid E-Pin', description: 'Please verify your E-Pin and try again.', variant: 'destructive' });
         return false;
       }
 
       if (epinRow.is_used) {
+        console.log('E-PIN already used');
         toast({ title: 'E-Pin Already Used', description: 'This E-Pin has already been used.', variant: 'destructive' });
         return false;
       }
 
       // 2) Create auth user. Supabase may require email confirmation.
+      console.log('Creating auth user');
       const redirectUrl = `${window.location.origin}/login`;
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: (userData.email || '').trim(),
@@ -316,6 +324,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       });
+
+      console.log('Auth signup result:', { signUpData, signUpError });
 
       if (signUpError) {
         toast({ title: 'Registration failed', description: signUpError.message || 'Could not create account', variant: 'destructive' });
