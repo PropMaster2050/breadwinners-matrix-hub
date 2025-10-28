@@ -272,11 +272,16 @@ export type Database = {
         Args: { _amount: number; _user_id: string; _wallet_type: string }
         Returns: boolean
       }
+      downline_user_ids: { Args: { viewer_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_in_user_branch: {
+        Args: { target_user_id: string; viewer_id: string }
         Returns: boolean
       }
       promote_user_to_admin: { Args: { user_email: string }; Returns: boolean }
