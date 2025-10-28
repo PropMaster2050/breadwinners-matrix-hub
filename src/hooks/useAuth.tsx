@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -90,6 +90,82 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
+  const hydrateUserFromSupabase = async (userId: string): Promise<User | null> => {
+    try {
+      const [
+        { data: roleData },
+        { data: profileData },
+        { data: walletData },
+        { data: networkData }
+      ] = await Promise.all([
+        supabase.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle(),
+        supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('wallets').select('*').eq('user_id', userId).maybeSingle(),
+        supabase.from('network_tree').select('*').eq('user_id', userId).maybeSingle(),
+      ]);
+
+      const admin = !!roleData;
+
+      if (!profileData) return null;
+
+      const baseUser: User = {
+        id: userId,
+        memberId: profileData.id,
+        fullName: profileData.full_name,
+        username: profileData.username,
+        email: profileData.email,
+        mobile: profileData.phone || '',
+        level: networkData?.level || 1,
+        stage: networkData?.stage || 1,
+        earnings: walletData?.total_earned || 0,
+        directRecruits: profileData.direct_recruits || 0,
+        totalRecruits: profileData.total_recruits || 0,
+        isActive: true,
+        joinDate: profileData.created_at,
+        wallets: {
+          eWallet: walletData?.e_wallet_balance || 0,
+          registrationWallet: walletData?.registration_wallet_balance || 250,
+          incentiveWallet: walletData?.incentive_wallet_balance || 0
+        }
+      };
+
+      setUser(baseUser);
+      setIsAdmin(admin);
+      localStorage.setItem('breadwinners_user', JSON.stringify(baseUser));
+      return baseUser;
+    } catch (e) {
+      console.error('Failed to hydrate user:', e);
+      return null;
+    }
+  };
+
+  // Keep auth state in sync and avoid ghost logins
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        // Defer Supabase calls outside the callback
+        setTimeout(() => {
+          hydrateUserFromSupabase(session.user!.id);
+        }, 0);
+      } else {
+        setUser(null);
+        setIsAdmin(false);
+        localStorage.removeItem('breadwinners_user');
+      }
+    });
+
+    // Initialize session on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        hydrateUserFromSupabase(session.user.id);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
       let email = username;
@@ -124,52 +200,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const isUserAdmin = !!roleData;
 
-        // Fetch profile for both admin and user
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*, wallets(*), network_tree(*)')
-          .eq('user_id', data.user.id)
-          .maybeSingle();
-
-        if (profileData) {
-          const wallets = Array.isArray((profileData as any).wallets) ? (profileData as any).wallets[0] : null;
-          const networkTree = Array.isArray((profileData as any).network_tree) ? (profileData as any).network_tree[0] : null;
-
-          const baseUser: User = {
-            id: data.user.id,
-            memberId: profileData.id,
-            fullName: profileData.full_name,
-            username: profileData.username,
-            email: profileData.email,
-            mobile: profileData.phone || '',
-            level: networkTree?.level || 1,
-            stage: networkTree?.stage || 1,
-            earnings: wallets?.total_earned || 0,
-            directRecruits: profileData.direct_recruits || 0,
-            totalRecruits: profileData.total_recruits || 0,
-            isActive: true,
-            joinDate: profileData.created_at,
-            wallets: {
-              eWallet: wallets?.e_wallet_balance || 0,
-              registrationWallet: wallets?.registration_wallet_balance || 250,
-              incentiveWallet: wallets?.incentive_wallet_balance || 0
-            }
-          };
-
-          setUser(baseUser);
-          setIsAdmin(isUserAdmin);
-          localStorage.setItem('breadwinners_user', JSON.stringify(baseUser));
-
-          toast({ title: isUserAdmin ? "Welcome back, Administrator!" : `Welcome back, ${profileData.full_name}!` });
+        // Hydrate user profile and roles safely
+        const hydrated = await hydrateUserFromSupabase(data.user.id);
+        if (hydrated) {
+          toast({ title: isUserAdmin ? "Welcome back, Administrator!" : `Welcome back, ${hydrated.fullName}!` });
           navigate(isUserAdmin ? '/admin' : '/dashboard');
           return true;
         }
 
-        // If profile missing, still set admin flag for route guarding
-        setIsAdmin(isUserAdmin);
-        toast({ title: isUserAdmin ? "Welcome back, Administrator!" : "Welcome back!" });
-        navigate(isUserAdmin ? '/admin' : '/dashboard');
-        return true;
+        // If hydration failed, sign out and show error to avoid ghost login
+        await supabase.auth.signOut();
+        toast({
+          title: "Login failed",
+          description: "Could not load your profile. Please try again.",
+          variant: "destructive"
+        });
+        return false;
 
       }
 
