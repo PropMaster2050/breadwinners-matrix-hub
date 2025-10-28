@@ -270,50 +270,36 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const register = async (userData: RegisterData): Promise<boolean> => {
+    // Minimal, reliable flow to avoid hangs. We only validate E-PIN, create auth user, and exit.
     try {
-      // Validate e-pin from database
-      const { data: epinData, error: epinError } = await supabase
+      // 1) Validate E-PIN exists (read-only). Use maybeSingle to avoid throwing.
+      const epinCode = (userData.epin || '').trim().toUpperCase();
+      if (!epinCode) {
+        toast({ title: 'Registration failed', description: 'E-Pin is required', variant: 'destructive' });
+        return false;
+      }
+
+      const { data: epinRow, error: epinErr } = await supabase
         .from('epins')
         .select('*')
-        .eq('code', userData.epin.toUpperCase())
-        .single();
+        .eq('code', epinCode)
+        .maybeSingle();
 
-      if (epinError || !epinData) {
-        toast({ 
-          title: "Registration failed", 
-          description: "Invalid e-pin code. Please check and try again.",
-          variant: "destructive" 
-        });
+      if (epinErr || !epinRow) {
+        toast({ title: 'Invalid E-Pin', description: 'Please verify your E-Pin and try again.', variant: 'destructive' });
         return false;
       }
 
-      if (epinData.is_used) {
-        toast({ 
-          title: "E-Pin Already Used", 
-          description: "This e-pin has already been used. Please contact support for assistance.",
-          variant: "destructive" 
-        });
+      if (epinRow.is_used) {
+        toast({ title: 'E-Pin Already Used', description: 'This E-Pin has already been used.', variant: 'destructive' });
         return false;
       }
 
-      // Check if username already exists
-      const storedUsers = JSON.parse(localStorage.getItem('breadwinners_users') || '[]');
-      const existingUser = storedUsers.find((u: any) => u.username === userData.username);
-
-      if (existingUser) {
-        toast({ 
-          title: "Registration failed", 
-          description: "Username already exists",
-          variant: "destructive" 
-        });
-        return false;
-      }
-
-      // Sign up user in Supabase Auth to centralize accounts
+      // 2) Create auth user. Supabase may require email confirmation.
       const redirectUrl = `${window.location.origin}/login`;
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: userData.email || '',
-        password: userData.password,
+        email: (userData.email || '').trim(),
+        password: (userData.password || '').trim(),
         options: {
           emailRedirectTo: redirectUrl,
           data: {
@@ -332,208 +318,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (signUpError) {
-        toast({
-          title: "Registration failed",
-          description: signUpError.message || "Could not create account",
-          variant: "destructive"
-        });
+        toast({ title: 'Registration failed', description: signUpError.message || 'Could not create account', variant: 'destructive' });
         return false;
       }
 
-      // Generate random member ID
-      const randomSuffix = Math.floor(Math.random() * 900000) + 100000; // 6-digit random number
-      const randomPrefix = Math.floor(Math.random() * 900) + 100; // 3-digit random number
-      
-      // Create new user
-      const newUser: User & { password: string } = {
-        id: `user_${Date.now()}`,
-        memberId: `BW${randomPrefix}${randomSuffix}`,
-        fullName: userData.fullName,
-        username: userData.username,
-        password: userData.password,
-        mobile: userData.mobile,
-        email: userData.email,
-        physicalAddress: userData.physicalAddress,
-        province: userData.province,
-        age: userData.age,
-        gender: userData.gender,
-        sponsorId: userData.sponsorId,
-        level: 1,
-        stage: 1,
-        earnings: 0,
-        directRecruits: 0,
-        totalRecruits: 0,
-        isActive: true,
-        joinDate: new Date().toISOString(),
-        transactionPin: userData.transactionPin,
-        wallets: {
-          eWallet: 0,
-          registrationWallet: 0, // Start with R0 as requested
-          incentiveWallet: 0
-        },
-        downlines: []
-      };
+      // IMPORTANT: Do not mutate wallets/commissions from client. The DB trigger (handle_new_user)
+      // creates profile, wallet, network position and awards commission to sponsor.
+      // Also do not attempt to update the E-Pin here due to RLS. Admins handle that.
 
-      // Handle sponsor relationship and upline rewards
-      if (userData.sponsorId) {
-        const sponsor = storedUsers.find((u: any) => u.memberId === userData.sponsorId);
-        if (sponsor) {
-          // Add this user to sponsor's downlines at level 1
-          if (!sponsor.downlines) sponsor.downlines = [];
-          sponsor.downlines.push({
-            memberId: newUser.memberId,
-            fullName: newUser.fullName,
-            joinDate: newUser.joinDate,
-            level: 1,
-            isActive: true
-          });
-          
-          // Update sponsor's direct recruit stats
-          sponsor.directRecruits += 1;
-          sponsor.totalRecruits += 1;
-          
-          // Calculate sponsor's Stage 1 earnings (2×2 matrix)
-          let sponsorStage1Count = 0;
-          const sponsorDirects = sponsor.downlines.filter((d: any) => d.level === 1).slice(0, 2);
-          sponsorStage1Count += sponsorDirects.length;
-          
-          // Count second-level recruits (grandchildren)
-          sponsorDirects.forEach((direct: any) => {
-            const directUser = storedUsers.find((u: any) => u.memberId === direct.memberId);
-            if (directUser?.downlines) {
-              const secondLevel = directUser.downlines.filter((d: any) => d.level === 1).slice(0, 2);
-              sponsorStage1Count += secondLevel.length;
-            }
-          });
-          
-          // Cap at 6 members for Stage 1
-          sponsorStage1Count = Math.min(sponsorStage1Count, 6);
-          
-          // Update sponsor's earnings based on Stage 1 matrix
-          sponsor.earnings = sponsorStage1Count * 100;
-          sponsor.wallets.eWallet = sponsorStage1Count * 100;
-          
-          // Update sponsor's wallet in Supabase
-          const sponsorProfile = await supabase.from('profiles').select('user_id').eq('id', sponsor.memberId).maybeSingle();
-          if (sponsorProfile.data?.user_id) {
-            await supabase.from('wallets').update({
-              e_wallet_balance: sponsor.wallets.eWallet,
-              total_earned: sponsor.earnings
-            }).eq('user_id', sponsorProfile.data.user_id);
-            
-            await supabase.from('profiles').update({
-              direct_recruits: sponsor.directRecruits,
-              total_recruits: sponsor.totalRecruits
-            }).eq('user_id', sponsorProfile.data.user_id);
-          }
-          
-          // Check if sponsor completed Stage 1 (6 members)
-          if (sponsorStage1Count === 6 && sponsor.stage === 1) {
-            sponsor.stage = 2; // Auto-promote to Stage 2
-          }
-          
-          // Add upline info to new user
-          newUser.uplineId = sponsor.memberId;
-          newUser.uplineName = sponsor.fullName;
-          
-          // Also update grandparent's earnings if this is a second-level recruit
-          if (sponsor.uplineId) {
-            const grandparent = storedUsers.find((u: any) => u.memberId === sponsor.uplineId);
-            if (grandparent) {
-              // Add to grandparent's downlines at level 2
-              if (!grandparent.downlines) grandparent.downlines = [];
-              
-              // Check if already exists at level 2
-              const existingDownline = grandparent.downlines.find((d: any) => d.memberId === newUser.memberId);
-              if (!existingDownline) {
-                grandparent.downlines.push({
-                  memberId: newUser.memberId,
-                  fullName: newUser.fullName,
-                  joinDate: newUser.joinDate,
-                  level: 2,
-                  isActive: true
-                });
-              }
-              
-              grandparent.totalRecruits += 1;
-              
-              // Recalculate grandparent's Stage 1 earnings
-              let gpStage1Count = 0;
-              const gpDirects = grandparent.downlines.filter((d: any) => d.level === 1).slice(0, 2);
-              gpStage1Count += gpDirects.length;
-              
-              gpDirects.forEach((direct: any) => {
-                const directUser = storedUsers.find((u: any) => u.memberId === direct.memberId);
-                if (directUser?.downlines) {
-                  const secondLevel = directUser.downlines.filter((d: any) => d.level === 1).slice(0, 2);
-                  gpStage1Count += secondLevel.length;
-                }
-              });
-              
-              gpStage1Count = Math.min(gpStage1Count, 6);
-              grandparent.earnings = gpStage1Count * 100;
-              grandparent.wallets.eWallet = gpStage1Count * 100;
-              
-              // Check if grandparent completed Stage 1
-              if (gpStage1Count === 6 && grandparent.stage === 1) {
-                grandparent.stage = 2;
-              }
-              
-              // Update grandparent's wallet in Supabase
-              const gpProfile = await supabase.from('profiles').select('user_id').eq('id', grandparent.memberId).maybeSingle();
-              if (gpProfile.data?.user_id) {
-                await supabase.from('wallets').update({
-                  e_wallet_balance: grandparent.wallets.eWallet,
-                  total_earned: grandparent.earnings
-                }).eq('user_id', gpProfile.data.user_id);
-                
-                await supabase.from('profiles').update({
-                  total_recruits: grandparent.totalRecruits
-                }).eq('user_id', gpProfile.data.user_id);
-              }
-            }
-          }
-        }
+      // If a session was created (email confirmations disabled), hydrate and go to dashboard.
+      if (signUpData.session?.user) {
+        await hydrateUserFromSupabase(signUpData.session.user.id);
+        toast({ title: `Welcome to Breadwinners, ${userData.fullName}!` });
+        // Save credentials for convenience
+        localStorage.setItem('rememberedCredentials', JSON.stringify({
+          username: userData.username,
+          password: userData.password
+        }));
+        navigate('/dashboard');
+        return true;
       }
 
-      // Save user
-      storedUsers.push(newUser);
-      localStorage.setItem('breadwinners_users', JSON.stringify(storedUsers));
-
-      // Mark e-pin as used in database
-      const { error: updateError } = await supabase
-        .from('epins')
-        .update({ 
-          is_used: true, 
-          used_at: new Date().toISOString()
-        })
-        .eq('id', epinData.id);
-
-      if (updateError) {
-        console.error('Failed to mark e-pin as used:', updateError);
-        // Continue with registration even if this fails
-      }
-
-      // Auto-login after registration
-      const { password: _, ...userWithoutPassword } = newUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('breadwinners_user', JSON.stringify(userWithoutPassword));
-      
-      // Save credentials for easy future login
-      localStorage.setItem('rememberedCredentials', JSON.stringify({
-        username: userData.username,
-        password: userData.password
-      }));
-
-      toast({ title: `Welcome to Breadwinners, ${userData.fullName}!` });
-      navigate('/dashboard');
+      // Otherwise, guide the user to confirm email, then log in.
+      toast({
+        title: 'Verify your email',
+        description: 'We sent you a confirmation link. After verifying, please sign in.',
+      });
+      navigate('/login');
       return true;
     } catch (error) {
-      toast({ 
-        title: "Registration error", 
-        description: "An error occurred during registration",
-        variant: "destructive" 
-      });
+      console.error('Registration error:', error);
+      toast({ title: 'Registration error', description: 'Something went wrong. Please try again.', variant: 'destructive' });
       return false;
     }
   };
