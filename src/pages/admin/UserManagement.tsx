@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth, User } from "@/hooks/useAuth";
 import { Users, Wallet, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface BankDetails {
   accountHolder: string;
@@ -28,42 +29,48 @@ const UserManagement = () => {
     const loadUsers = async () => {
       if (!isAdmin) return;
 
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          wallets(*),
-          network_tree(*)
-        `);
+      try {
+        const { data: profiles, error } = await supabase
+          .from('profiles')
+          .select(`
+            *,
+            wallets(*),
+            network_tree(*)
+          `);
 
-      if (error) {
-        console.error('Error fetching users:', error);
-        return;
-      }
+        if (error) {
+          console.error('Error fetching users:', error);
+          toast.error(`Failed to load users: ${error.message}`);
+          return;
+        }
 
-      if (profiles) {
-        // Transform Supabase profiles to match User interface
-        const transformedUsers = profiles.map((profile: any) => ({
-          id: profile.user_id,
-          memberId: profile.id,
-          fullName: profile.full_name,
-          username: profile.username,
-          mobile: profile.phone,
-          email: profile.email,
-          level: profile.network_tree?.[0]?.level || 1,
-          stage: profile.network_tree?.[0]?.stage || 1,
-          earnings: profile.wallets?.[0]?.total_earned || 0,
-          directRecruits: profile.direct_recruits,
-          totalRecruits: profile.total_recruits,
-          isActive: true,
-          joinDate: profile.created_at,
-          wallets: {
-            eWallet: profile.wallets?.[0]?.e_wallet_balance || 0,
-            registrationWallet: profile.wallets?.[0]?.registration_wallet_balance || 0,
-            incentiveWallet: profile.wallets?.[0]?.incentive_wallet_balance || 0
-          }
-        }));
-        setAllUsers(transformedUsers);
+        if (profiles) {
+          // Transform Supabase profiles to match User interface
+          const transformedUsers = profiles.map((profile: any) => ({
+            id: profile.user_id,
+            memberId: profile.id,
+            fullName: profile.full_name,
+            username: profile.username,
+            mobile: profile.phone,
+            email: profile.email,
+            level: profile.network_tree?.[0]?.level || 1,
+            stage: profile.network_tree?.[0]?.stage || 1,
+            earnings: profile.wallets?.[0]?.total_earned || 0,
+            directRecruits: profile.direct_recruits,
+            totalRecruits: profile.total_recruits,
+            isActive: true,
+            joinDate: profile.created_at,
+            wallets: {
+              eWallet: profile.wallets?.[0]?.e_wallet_balance || 0,
+              registrationWallet: profile.wallets?.[0]?.registration_wallet_balance || 0,
+              incentiveWallet: profile.wallets?.[0]?.incentive_wallet_balance || 0
+            }
+          }));
+          setAllUsers(transformedUsers);
+        }
+      } catch (err: any) {
+        console.error('Unexpected error loading users:', err);
+        toast.error('Failed to load users. Please refresh the page.');
       }
     };
 
