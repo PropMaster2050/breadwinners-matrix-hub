@@ -32,8 +32,20 @@ export const initDemoData = () => {
     localStorage.setItem('breadwinners_epins', JSON.stringify(demoEpins));
   }
 
-  // Initialize demo users if not exists
-  if (!localStorage.getItem('breadwinners_users')) {
+  // Initialize demo users if not exists or empty
+  const existingUsersRaw = localStorage.getItem('breadwinners_users');
+  let shouldSeed = false;
+  if (!existingUsersRaw) {
+    shouldSeed = true;
+  } else {
+    try {
+      const parsed = JSON.parse(existingUsersRaw);
+      if (Array.isArray(parsed) && parsed.length === 0) shouldSeed = true;
+    } catch {
+      shouldSeed = true;
+    }
+  }
+  if (shouldSeed) {
     const demoUsers = [
       {
         id: 'demo-user-1',
