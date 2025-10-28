@@ -273,6 +273,7 @@ export type Database = {
         Returns: boolean
       }
       downline_user_ids: { Args: { viewer_id: string }; Returns: string[] }
+      get_email_for_login: { Args: { identifier: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

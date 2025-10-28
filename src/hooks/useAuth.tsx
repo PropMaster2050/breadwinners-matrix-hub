@@ -187,24 +187,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdminLogin = true;
         email = cleanUsername;
       } else {
-        // For regular users, look up email from profiles using username
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('email')
-          .ilike('username', cleanUsername)
-          .maybeSingle();
+        // For regular users, resolve email using secure RPC (supports username or BWN ID, case-insensitive)
+        const { data: resolvedEmail, error: rpcError } = await supabase
+          .rpc('get_email_for_login', { identifier: cleanUsername });
         
-        if (profileData?.email) {
-          email = profileData.email;
-        } else {
-          // Username not found
+        if (rpcError || !resolvedEmail) {
           toast({
             title: "Login failed",
-            description: "Username not found. Please check your username.",
+            description: "Username or BWN ID not found. Please check your login details.",
             variant: "destructive"
           });
           return false;
         }
+        
+        email = resolvedEmail;
       }
       
       // Try Supabase authentication with cleaned password
