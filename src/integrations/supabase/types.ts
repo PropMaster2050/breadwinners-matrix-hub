@@ -203,6 +203,36 @@ export type Database = {
         }
         Relationships: []
       }
+      registration_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          parent_found: boolean | null
+          parent_id: string | null
+          referrer_code: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          parent_found?: boolean | null
+          parent_id?: string | null
+          referrer_code?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          parent_found?: boolean | null
+          parent_id?: string | null
+          referrer_code?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       stage_completions: {
         Row: {
           completed_at: string
