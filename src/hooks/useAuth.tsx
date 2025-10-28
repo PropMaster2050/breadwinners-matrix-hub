@@ -77,7 +77,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    // Safe fallback to avoid runtime crashes if Provider isn't mounted yet
+    return {
+      user: null,
+      login: async () => false,
+      register: async () => false,
+      logout: () => {},
+      isAuthenticated: false,
+      isAdmin: false,
+    } as AuthContextType;
   }
   return context;
 };
