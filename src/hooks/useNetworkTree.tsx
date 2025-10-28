@@ -62,7 +62,7 @@ export const useNetworkTree = (stageNumber: number) => {
 
       console.log('Direct recruits found:', directRecruits?.length || 0);
 
-      // For each direct recruit, fetch their commission data
+      // For each direct recruit, fetch their commission data AND their recruits
       const treeWithDownlines = await Promise.all(
         (directRecruits || []).map(async (recruit: any) => {
           // Fetch stage completion data
@@ -82,7 +82,36 @@ export const useNetworkTree = (stageNumber: number) => {
             .eq('stage_number', stageNumber)
             .maybeSingle();
 
-          console.log('Commission for recruit', recruit.profiles.username, ':', commission);
+          // Fetch their recruits (grandchildren)
+          const { data: grandchildren } = await supabase
+            .from('network_tree')
+            .select(`
+              user_id,
+              created_at,
+              profiles!inner(
+                user_id,
+                full_name,
+                username,
+                avatar_url,
+                current_stage,
+                created_at
+              )
+            `)
+            .eq('parent_id', recruit.user_id)
+            .order('created_at', { ascending: true });
+
+          const downlines = (grandchildren || []).map((gc: any) => ({
+            id: gc.user_id,
+            user_id: gc.user_id,
+            full_name: gc.profiles.full_name,
+            username: gc.profiles.username,
+            avatar_url: gc.profiles.avatar_url,
+            current_stage: gc.profiles.current_stage,
+            joined_at: gc.profiles.created_at,
+            downlines: []
+          }));
+
+          console.log('Recruit', recruit.profiles.username, 'has', downlines.length, 'downlines');
 
           return {
             id: recruit.user_id,
@@ -94,7 +123,7 @@ export const useNetworkTree = (stageNumber: number) => {
             joined_at: recruit.profiles.created_at,
             stage_completed: completions?.[0]?.stage_number || 0,
             commission_earned: commission?.amount || 0,
-            downlines: [] // Removed grandchildren for 6-person direct model
+            downlines: downlines
           };
         })
       );

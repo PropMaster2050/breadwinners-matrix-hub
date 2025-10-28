@@ -63,7 +63,7 @@ export const StageTreeView = ({
       {/* Level 1: Direct Recruits (6 positions) */}
       <div className="relative grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-12">
         {directRecruits.map((member, index) => (
-          <div key={member.id} className="flex flex-col items-center">
+          <div key={member.id} className="flex flex-col items-center space-y-4">
             {/* Direct recruit */}
             <TreeNode 
               member={member} 
@@ -71,6 +71,25 @@ export const StageTreeView = ({
               level={1}
               onMemberClick={onMemberClick}
             />
+            
+            {/* Show their recruits (grandchildren) if any */}
+            {member.downlines && member.downlines.length > 0 && (
+              <>
+                <div className="w-0.5 h-4 bg-gradient-to-b from-primary to-primary/50" />
+                <div className="flex gap-2">
+                  {member.downlines.slice(0, 6).map((downline) => (
+                    <div key={downline.id} className="w-12 md:w-16">
+                      <TreeNode 
+                        member={downline} 
+                        stageNumber={stageNumber} 
+                        level={2}
+                        onMemberClick={onMemberClick}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         ))}
 
