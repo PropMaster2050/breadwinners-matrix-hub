@@ -37,7 +37,7 @@ export const useNetworkTree = (stageNumber: number) => {
     try {
       setLoading(true);
 
-      // Fetch direct recruits from network_tree
+      // Fetch direct recruits from network_tree using correct user.id field
       const { data: directRecruits, error: networkError } = await supabase
         .from('network_tree')
         .select(`
