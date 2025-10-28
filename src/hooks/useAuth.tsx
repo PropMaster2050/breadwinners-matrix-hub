@@ -175,9 +175,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const cleanPassword = password.trim();
       
       let email = cleanUsername;
+      let isAdminLogin = false;
       
-      // If input doesn't look like email, look up email from profiles (case-insensitive)
-      if (!cleanUsername.includes('@')) {
+      // Check if this is admin login (contains @)
+      if (cleanUsername.includes('@')) {
+        isAdminLogin = true;
+        email = cleanUsername;
+      } else {
+        // For regular users, look up email from profiles using username
         const { data: profileData } = await supabase
           .from('profiles')
           .select('email')
@@ -186,6 +191,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (profileData?.email) {
           email = profileData.email;
+        } else {
+          // Username not found
+          toast({
+            title: "Login failed",
+            description: "Username not found. Please check your username.",
+            variant: "destructive"
+          });
+          return false;
         }
       }
       

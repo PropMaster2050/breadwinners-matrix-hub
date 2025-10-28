@@ -30,11 +30,13 @@ const UserManagement = () => {
       if (!isAdmin) return;
 
       try {
-        // Fetch all data separately
-        const [profilesResult, walletsResult, networkResult] = await Promise.all([
+        // Fetch all data separately including bank accounts and withdrawals
+        const [profilesResult, walletsResult, networkResult, bankAccountsResult, withdrawalsResult] = await Promise.all([
           supabase.from('profiles').select('*'),
           supabase.from('wallets').select('*'),
-          supabase.from('network_tree').select('*')
+          supabase.from('network_tree').select('*'),
+          supabase.from('bank_accounts').select('*'),
+          supabase.from('withdrawals').select('*')
         ]);
 
         if (profilesResult.error) {
@@ -58,15 +60,37 @@ const UserManagement = () => {
         const profiles = profilesResult.data || [];
         const wallets = walletsResult.data || [];
         const networkTree = networkResult.data || [];
+        const bankAccounts = bankAccountsResult.data || [];
+        const withdrawals = withdrawalsResult.data || [];
 
         // Create lookup maps
         const walletsMap = new Map(wallets.map(w => [w.user_id, w]));
         const networkMap = new Map(networkTree.map(n => [n.user_id, n]));
+        const bankAccountsMap = new Map();
+        const withdrawalsMap = new Map();
+
+        // Group bank accounts by user_id
+        bankAccounts.forEach(account => {
+          if (!bankAccountsMap.has(account.user_id)) {
+            bankAccountsMap.set(account.user_id, []);
+          }
+          bankAccountsMap.get(account.user_id).push(account);
+        });
+
+        // Group withdrawals by user_id
+        withdrawals.forEach(withdrawal => {
+          if (!withdrawalsMap.has(withdrawal.user_id)) {
+            withdrawalsMap.set(withdrawal.user_id, []);
+          }
+          withdrawalsMap.get(withdrawal.user_id).push(withdrawal);
+        });
 
         // Transform Supabase profiles to match User interface
         const transformedUsers = profiles.map((profile: any) => {
           const userWallet = walletsMap.get(profile.user_id);
           const userNetwork = networkMap.get(profile.user_id);
+          const userBankAccounts = bankAccountsMap.get(profile.user_id) || [];
+          const userWithdrawals = withdrawalsMap.get(profile.user_id) || [];
 
           return {
             id: profile.user_id,
@@ -86,7 +110,9 @@ const UserManagement = () => {
               eWallet: userWallet?.e_wallet_balance || 0,
               registrationWallet: userWallet?.registration_wallet_balance || 0,
               incentiveWallet: userWallet?.incentive_wallet_balance || 0
-            }
+            },
+            bankAccounts: userBankAccounts,
+            withdrawals: userWithdrawals
           };
         });
         
@@ -182,10 +208,10 @@ const UserManagement = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allUsers.map((userData) => {
-                  const bankDetails = getUserBankDetails(userData.memberId);
-                  const withdrawals = getUserWithdrawals(userData.memberId);
-                  const totalWithdrawn = withdrawals.reduce((sum, w) => sum + w.amount, 0);
+                {allUsers.map((userData: any) => {
+                  const userBankAccounts = userData.bankAccounts || [];
+                  const userWithdrawals = userData.withdrawals || [];
+                  const totalWithdrawn = userWithdrawals.reduce((sum: number, w: any) => sum + (w.amount || 0), 0);
 
                   return (
                     <TableRow key={userData.memberId}>
@@ -201,33 +227,45 @@ const UserManagement = () => {
                       </TableCell>
                       <TableCell className="whitespace-nowrap">R{(userData.wallets?.eWallet || 0).toFixed(2)}</TableCell>
                       <TableCell className="whitespace-nowrap">R{userData.earnings.toFixed(2)}</TableCell>
-                      <TableCell className="min-w-[200px]">
-                        {(() => {
-                          const bankAccounts = localStorage.getItem(`bankAccounts_${userData.memberId}`);
-                          const accounts = bankAccounts ? JSON.parse(bankAccounts) : [];
-                          
-                          if (accounts.length > 0) {
-                            return (
-                              <div className="space-y-2">
-                                {accounts.map((acc: any, idx: number) => (
-                                  <div key={idx} className="text-xs border-b pb-2 last:border-0">
-                                    <div className="font-medium">{acc.bankName}</div>
-                                    <div className="text-muted-foreground">{acc.accountNumber}</div>
-                                    <div className="text-muted-foreground">{acc.accountHolder}</div>
-                                    {acc.isLocked && <Badge variant="secondary" className="mt-1">Locked</Badge>}
-                                  </div>
-                                ))}
+                      <TableCell className="min-w-[250px] max-w-[300px]">
+                        {userBankAccounts.length > 0 ? (
+                          <div className="space-y-3 py-2">
+                            {userBankAccounts.map((acc: any, idx: number) => (
+                              <div key={idx} className="bg-muted/30 p-3 rounded-lg border">
+                                <div className="font-medium text-sm">{acc.bank_name}</div>
+                                <div className="text-xs text-muted-foreground mt-1">
+                                  <div>Acc: {acc.account_number}</div>
+                                  <div>Holder: {acc.account_holder}</div>
+                                  <div>Branch: {acc.branch_code}</div>
+                                </div>
+                                {acc.is_locked && <Badge variant="destructive" className="mt-2 text-xs">Locked</Badge>}
                               </div>
-                            );
-                          }
-                          return <span className="text-muted-foreground">Not provided</span>;
-                        })()}
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-muted-foreground text-sm italic">No bank accounts</div>
+                        )}
                       </TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <div className="text-xs">
-                          <div className="font-medium">R{totalWithdrawn.toFixed(2)}</div>
-                          <div className="text-muted-foreground">{withdrawals.length} withdrawals</div>
-                        </div>
+                      <TableCell className="min-w-[150px]">
+                        {userWithdrawals.length > 0 ? (
+                          <div className="space-y-2 py-2">
+                            <div className="font-medium text-sm">Total: R{totalWithdrawn.toFixed(2)}</div>
+                            <div className="text-xs text-muted-foreground">{userWithdrawals.length} withdrawals</div>
+                            <div className="space-y-1 max-h-24 overflow-y-auto">
+                              {userWithdrawals.slice(0, 3).map((w: any, idx: number) => (
+                                <div key={idx} className="bg-muted/20 p-2 rounded text-xs">
+                                  <div>R{w.amount}</div>
+                                  <div className="text-muted-foreground">{w.status}</div>
+                                </div>
+                              ))}
+                              {userWithdrawals.length > 3 && (
+                                <div className="text-xs text-muted-foreground">+{userWithdrawals.length - 3} more</div>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-muted-foreground text-sm italic">No withdrawals</div>
+                        )}
                       </TableCell>
                     </TableRow>
                   );
