@@ -199,7 +199,7 @@ const UserManagement = () => {
                 <TableRow>
                   <TableHead className="whitespace-nowrap">Full Name</TableHead>
                   <TableHead className="whitespace-nowrap">Username</TableHead>
-                  <TableHead className="whitespace-nowrap">Member ID</TableHead>
+                  
                   <TableHead className="whitespace-nowrap">Stage</TableHead>
                   <TableHead className="whitespace-nowrap">E-Wallet</TableHead>
                   <TableHead className="whitespace-nowrap">Earnings</TableHead>
@@ -217,9 +217,6 @@ const UserManagement = () => {
                     <TableRow key={userData.memberId}>
                       <TableCell className="font-medium whitespace-nowrap">{userData.fullName}</TableCell>
                       <TableCell className="whitespace-nowrap">{userData.username}</TableCell>
-                      <TableCell className="whitespace-nowrap">
-                        <Badge variant="secondary">{userData.memberId}</Badge>
-                      </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <Badge className="bg-gradient-to-r from-primary to-accent">
                           Stage {userData.stage}
@@ -272,7 +269,7 @@ const UserManagement = () => {
                 })}
                 {allUsers.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                       No users registered yet
                     </TableCell>
                   </TableRow>

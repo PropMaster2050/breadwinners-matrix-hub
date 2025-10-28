@@ -219,6 +219,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         const isUserAdmin = !!roleData;
 
+        // If attempting email login but not admin, block and sign out
+        if (isAdminLogin && !isUserAdmin) {
+          await supabase.auth.signOut();
+          toast({
+            title: "Login blocked",
+            description: "Please use your username to log in.",
+            variant: "destructive"
+          });
+          return false;
+        }
+
         // Hydrate user profile and roles safely
         const hydrated = await hydrateUserFromSupabase(data.user.id);
         if (hydrated) {
