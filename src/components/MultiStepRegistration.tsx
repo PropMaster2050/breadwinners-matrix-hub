@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, CreditCard, User, MapPin, Shield, ArrowLeft, ArrowRight } from "lucide-react";
 import breadwinnersLogo from "@/assets/breadwinners-logo.png";
 import { Progress } from "@/components/ui/progress";
+import { toast } from "@/hooks/use-toast";
 
 interface RegisterData {
   fullName: string;
@@ -107,15 +108,36 @@ const MultiStepRegistration = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (step !== 2 || !formData.epin) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const registrationData = {
         ...formData,
         age: formData.age ? parseInt(formData.age) : undefined
       };
-      await register(registrationData);
+
+      // Safety timeout: avoid getting stuck if network hangs
+      const result = await Promise.race([
+        register(registrationData),
+        new Promise<boolean>((resolve) => {
+          setTimeout(() => resolve(false), 15000);
+        }),
+      ]);
+
+      if (result === false) {
+        toast({
+          title: "Registration taking longer than expected",
+          description: "Please check your E-Pin and internet connection, then try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      toast({
+        title: "Registration failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
