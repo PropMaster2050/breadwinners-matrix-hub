@@ -95,11 +95,13 @@ const AdminDashboard = () => {
     try {
       const { error, count } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact' })
+        .range(0, 0); // fetch zero rows, only need count
       if (error) throw error;
-      setTotalMembers(count || 0);
+      setTotalMembers(count ?? 0);
     } catch (error: any) {
-      toast.error(`Failed to load member count: ${error.message}`);
+      console.error('loadMembersCount error:', error);
+      toast.error(`Failed to load member count: ${error.message || 'Unknown error'}`);
     }
   };
 
