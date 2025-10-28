@@ -9,11 +9,11 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full max-w-full overflow-x-hidden bg-gradient-to-br from-background to-primary/5">
+      <div className="min-h-screen flex w-full bg-gradient-to-br from-background to-primary/5">
         <AppSidebar />
-        <SidebarInset className="relative z-10 flex-1 max-w-full">
+        <SidebarInset className="relative z-10 flex-1">
           <Header />
-          <main className="flex-1 p-6 max-w-full">
+          <main className="flex-1 p-6">
             {children}
           </main>
         </SidebarInset>

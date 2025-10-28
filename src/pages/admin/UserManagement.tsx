@@ -166,19 +166,19 @@ const UserManagement = () => {
           <CardTitle>All Registered Users</CardTitle>
           <CardDescription>Complete user information including wallets and bank details</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto max-w-full">
+            <Table className="min-w-max">
               <TableHeader>
                 <TableRow>
-                  <TableHead>Full Name</TableHead>
-                  <TableHead>Username</TableHead>
-                  <TableHead>Member ID</TableHead>
-                  <TableHead>Stage</TableHead>
-                  <TableHead>E-Wallet</TableHead>
-                  <TableHead>Earnings</TableHead>
-                  <TableHead>Bank Accounts</TableHead>
-                  <TableHead>Withdrawals</TableHead>
+                  <TableHead className="whitespace-nowrap">Full Name</TableHead>
+                  <TableHead className="whitespace-nowrap">Username</TableHead>
+                  <TableHead className="whitespace-nowrap">Member ID</TableHead>
+                  <TableHead className="whitespace-nowrap">Stage</TableHead>
+                  <TableHead className="whitespace-nowrap">E-Wallet</TableHead>
+                  <TableHead className="whitespace-nowrap">Earnings</TableHead>
+                  <TableHead className="whitespace-nowrap min-w-[200px]">Bank Accounts</TableHead>
+                  <TableHead className="whitespace-nowrap">Withdrawals</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -189,19 +189,19 @@ const UserManagement = () => {
 
                   return (
                     <TableRow key={userData.memberId}>
-                      <TableCell className="font-medium">{userData.fullName}</TableCell>
-                      <TableCell>{userData.username}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">{userData.fullName}</TableCell>
+                      <TableCell className="whitespace-nowrap">{userData.username}</TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <Badge variant="secondary">{userData.memberId}</Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <Badge className="bg-gradient-to-r from-primary to-accent">
                           Stage {userData.stage}
                         </Badge>
                       </TableCell>
-                      <TableCell>R{(userData.wallets?.eWallet || 0).toFixed(2)}</TableCell>
-                      <TableCell>R{userData.earnings.toFixed(2)}</TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">R{(userData.wallets?.eWallet || 0).toFixed(2)}</TableCell>
+                      <TableCell className="whitespace-nowrap">R{userData.earnings.toFixed(2)}</TableCell>
+                      <TableCell className="min-w-[200px]">
                         {(() => {
                           const bankAccounts = localStorage.getItem(`bankAccounts_${userData.memberId}`);
                           const accounts = bankAccounts ? JSON.parse(bankAccounts) : [];
@@ -223,7 +223,7 @@ const UserManagement = () => {
                           return <span className="text-muted-foreground">Not provided</span>;
                         })()}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="whitespace-nowrap">
                         <div className="text-xs">
                           <div className="font-medium">R{totalWithdrawn.toFixed(2)}</div>
                           <div className="text-muted-foreground">{withdrawals.length} withdrawals</div>
