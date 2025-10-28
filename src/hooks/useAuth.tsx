@@ -88,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const savedUser = localStorage.getItem('breadwinners_user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -104,40 +105,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .select('role')
           .eq('user_id', data.user.id)
           .eq('role', 'admin')
-          .single();
+          .maybeSingle();
 
-        if (roleData) {
-          // User is admin
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_id', data.user.id)
-            .single();
+        const isUserAdmin = !!roleData;
 
-          if (profileData) {
-            const adminUser: User = {
-              id: data.user.id,
-              memberId: profileData.id,
-              fullName: profileData.full_name,
-              username: profileData.username,
-              email: profileData.email,
-              mobile: profileData.phone || '',
-              level: 1,
-              stage: 1,
-              earnings: 0,
-              directRecruits: 0,
-              totalRecruits: 0,
-              isActive: true,
-              joinDate: profileData.created_at,
-              wallets: { eWallet: 0, registrationWallet: 0, incentiveWallet: 0 }
-            };
-            setUser(adminUser);
-            localStorage.setItem('breadwinners_user', JSON.stringify(adminUser));
-            toast({ title: "Welcome back, Administrator!" });
-            navigate('/admin');
-            return true;
-          }
+        // Fetch profile for both admin and user
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*, wallets(*), network_tree(*)')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (profileData) {
+          const wallets = Array.isArray((profileData as any).wallets) ? (profileData as any).wallets[0] : null;
+          const networkTree = Array.isArray((profileData as any).network_tree) ? (profileData as any).network_tree[0] : null;
+
+          const baseUser: User = {
+            id: data.user.id,
+            memberId: profileData.id,
+            fullName: profileData.full_name,
+            username: profileData.username,
+            email: profileData.email,
+            mobile: profileData.phone || '',
+            level: networkTree?.level || 1,
+            stage: networkTree?.stage || 1,
+            earnings: wallets?.total_earned || 0,
+            directRecruits: profileData.direct_recruits || 0,
+            totalRecruits: profileData.total_recruits || 0,
+            isActive: true,
+            joinDate: profileData.created_at,
+            wallets: {
+              eWallet: wallets?.e_wallet_balance || 0,
+              registrationWallet: wallets?.registration_wallet_balance || 250,
+              incentiveWallet: wallets?.incentive_wallet_balance || 0
+            }
+          };
+
+          setUser(baseUser);
+          setIsAdmin(isUserAdmin);
+          localStorage.setItem('breadwinners_user', JSON.stringify(baseUser));
+
+          toast({ title: isUserAdmin ? "Welcome back, Administrator!" : `Welcome back, ${profileData.full_name}!` });
+          navigate(isUserAdmin ? '/admin' : '/dashboard');
+          return true;
         }
+
+        // If profile missing, still set admin flag for route guarding
+        setIsAdmin(isUserAdmin);
+        toast({ title: isUserAdmin ? "Welcome back, Administrator!" : "Welcome back!" });
+        navigate(isUserAdmin ? '/admin' : '/dashboard');
+        return true;
 
         // Regular user login
         const { data: profileData } = await supabase
@@ -178,30 +195,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
 
-      // Fallback to hardcoded admin for initial setup
-      if (username === 'admin' && password === 'admin10') {
-        const adminUser: User = {
-          id: 'admin',
-          memberId: 'ADMIN001',
-          fullName: 'System Administrator',
-          username: 'admin',
-          email: 'admin@breadwinners.com',
-          mobile: '+27123456789',
-          level: 1,
-          stage: 1,
-          earnings: 0,
-          directRecruits: 0,
-          totalRecruits: 0,
-          isActive: true,
-          joinDate: new Date().toISOString(),
-          wallets: { eWallet: 0, registrationWallet: 0, incentiveWallet: 0 }
-        };
-        setUser(adminUser);
-        localStorage.setItem('breadwinners_user', JSON.stringify(adminUser));
-        toast({ title: "Welcome back, Administrator!" });
-        navigate('/admin');
-        return true;
-      }
+      // Removed insecure hardcoded admin fallback. Please use Supabase email/password login.
 
       toast({
         title: "Login failed",
@@ -464,6 +458,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = () => {
     setUser(null);
+    setIsAdmin(false);
     localStorage.removeItem('breadwinners_user');
     localStorage.removeItem('rememberedCredentials');
     toast({ title: "Logged out successfully" });
@@ -471,7 +466,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAuthenticated = !!user;
-  const isAdmin = user?.username === 'admin';
 
   return (
     <AuthContext.Provider value={{

@@ -20,12 +20,14 @@ interface WithdrawalRecord {
 }
 
 const UserManagement = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [allUsers, setAllUsers] = useState<User[]>([]);
 
   useEffect(() => {
     // Load all users from Supabase database
     const loadUsers = async () => {
+      if (!isAdmin) return;
+
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select(`
@@ -66,9 +68,9 @@ const UserManagement = () => {
     };
 
     loadUsers();
-  }, []);
+  }, [isAdmin]);
 
-  if (!user || user.username !== 'admin') return null;
+  if (!isAdmin) return null;
 
   const getUserBankDetails = (userId: string): BankDetails | null => {
     const bankDetails = localStorage.getItem(`bankDetails_${userId}`);
