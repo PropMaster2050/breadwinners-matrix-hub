@@ -11,7 +11,8 @@ import {
   Bell,
   BadgeDollarSign,
   ChevronDown,
-  TreePine
+  TreePine,
+  LogOut
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -27,6 +28,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 import {
@@ -35,6 +37,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Logo } from "@/components/Logo";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -63,6 +67,7 @@ const otherMenuItems = [
 
 export function AppSidebar() {
   const { state, isMobile, setOpenMobile } = useSidebar();
+  const { logout, user } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
 
@@ -208,6 +213,21 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="p-4 border-t border-sidebar-border/20">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <Button 
+              onClick={logout}
+              variant="ghost" 
+              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              {!isCollapsed && <span>Logout</span>}
+            </Button>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   );
 }
