@@ -10,7 +10,7 @@ import breadwinnersLogo from "@/assets/breadwinners-logo.png";
 
 const Login = () => {
   const { login } = useAuth();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,8 +20,8 @@ const Login = () => {
     const rememberedCredentials = localStorage.getItem('rememberedCredentials');
     if (rememberedCredentials) {
       try {
-        const { username: savedUsername, password: savedPassword } = JSON.parse(rememberedCredentials);
-        setUsername(savedUsername || "");
+        const { email: savedEmail, password: savedPassword } = JSON.parse(rememberedCredentials);
+        setEmail(savedEmail || "");
         setPassword(savedPassword || "");
       } catch (error) {
         console.error("Error loading saved credentials");
@@ -34,10 +34,10 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const success = await login(username, password);
+      const success = await login(email, password);
       if (success) {
         // Save credentials to localStorage for next time
-        localStorage.setItem('rememberedCredentials', JSON.stringify({ username, password }));
+        localStorage.setItem('rememberedCredentials', JSON.stringify({ email, password }));
       }
     } finally {
       setIsLoading(false);
@@ -72,13 +72,13 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email Address</Label>
                 <Input
-                  id="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   required
                   className="h-12"
                 />
