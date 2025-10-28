@@ -136,30 +136,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Keep auth state in sync and avoid ghost logins
+  // Keep auth state in sync without forcing sign-out on refresh
   useEffect(() => {
-    // Clear any existing sessions first
-    const clearSession = async () => {
-      await supabase.auth.signOut();
-      setUser(null);
-      setIsAdmin(false);
-      localStorage.removeItem('breadwinners_user');
-    };
-    
-    clearSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        // Only hydrate if this is a new login (not auto-restore)
-        if (_event === 'SIGNED_IN') {
-          setTimeout(() => {
-            hydrateUserFromSupabase(session.user!.id);
-          }, 0);
-        }
+        // Defer any Supabase calls to avoid deadlocks
+        setTimeout(() => {
+          hydrateUserFromSupabase(session.user!.id);
+        }, 0);
       } else {
         setUser(null);
         setIsAdmin(false);
         localStorage.removeItem('breadwinners_user');
+      }
+    });
+
+    // Initialize from existing session (if any)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setTimeout(() => {
+          hydrateUserFromSupabase(session.user!.id);
+        }, 0);
       }
     });
 
