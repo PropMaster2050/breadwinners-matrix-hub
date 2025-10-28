@@ -101,8 +101,8 @@ export function AppSidebar() {
                       className={({ isActive }) => 
                         `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ease-in-out ${
                           isActive 
-                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg transform scale-105" 
-                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:transform hover:scale-102"
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg" 
+                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         }`
                       }
                     >
@@ -186,8 +186,8 @@ export function AppSidebar() {
                       className={({ isActive }) => 
                         `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ease-in-out ${
                           isActive 
-                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg transform scale-105" 
-                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:transform hover:scale-102"
+                            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg" 
+                            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         }`
                       }
                     >

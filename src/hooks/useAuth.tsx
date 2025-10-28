@@ -168,14 +168,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      let email = username;
+      // Trim and clean inputs
+      const cleanUsername = username.trim();
+      const cleanPassword = password.trim();
       
-      // If input doesn't look like email, look up email from profiles
-      if (!username.includes('@')) {
+      let email = cleanUsername;
+      
+      // If input doesn't look like email, look up email from profiles (case-insensitive)
+      if (!cleanUsername.includes('@')) {
         const { data: profileData } = await supabase
           .from('profiles')
           .select('email')
-          .eq('username', username)
+          .ilike('username', cleanUsername)
           .maybeSingle();
         
         if (profileData?.email) {
@@ -183,10 +187,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Try Supabase authentication
+      // Try Supabase authentication with cleaned password
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email,
-        password: password,
+        password: cleanPassword,
       });
 
       if (!error && data.user) {
