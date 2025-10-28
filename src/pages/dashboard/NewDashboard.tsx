@@ -15,13 +15,28 @@ import {
   UserPlus,
   Gift,
   CreditCard,
-  Download
+  Download,
+  Copy,
+  Check
 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "@/hooks/use-toast";
 
 const NewDashboard = () => {
   const { user } = useAuth();
+  const [copied, setCopied] = useState(false);
 
   if (!user) return null;
+
+  const copyMemberId = () => {
+    navigator.clipboard.writeText(user.memberId);
+    setCopied(true);
+    toast({
+      title: "Copied!",
+      description: `Member ID ${user.memberId} copied to clipboard`,
+    });
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-accent/5 p-4 sm:p-6">
@@ -88,7 +103,25 @@ const NewDashboard = () => {
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center sm:text-left">
                 <h2 className="text-xl font-bold text-foreground">{user.fullName || user.username}</h2>
-                <p className="text-sm text-muted-foreground">Member ID: {user.memberId}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-sm text-muted-foreground">Member ID:</p>
+                  <Badge variant="secondary" className="text-sm font-mono">
+                    {user.memberId}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={copyMemberId}
+                    title="Copy Member ID"
+                  >
+                    {copied ? (
+                      <Check className="h-3 w-3 text-green-600" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
+                </div>
               </div>
               <div className="text-center sm:text-right">
                 <p className="text-sm text-muted-foreground">Total Earnings</p>

@@ -1,4 +1,5 @@
-import { Bell, LogOut, Settings } from "lucide-react";
+import { Bell, LogOut, Settings, Copy, Check } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
@@ -15,6 +16,15 @@ import { Logo } from "@/components/Logo";
 
 export function Header() {
   const { user, logout } = useAuth();
+  const [copied, setCopied] = useState(false);
+
+  const copyMemberId = () => {
+    if (user?.memberId) {
+      navigator.clipboard.writeText(user.memberId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -40,9 +50,22 @@ export function Header() {
                 <div className="text-right">
                   <p className="text-sm font-medium text-foreground">{user.fullName}</p>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      ID: {user.memberId}
+                    <Badge variant="secondary" className="text-xs font-mono">
+                      {user.memberId}
                     </Badge>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={copyMemberId}
+                      title="Copy Member ID"
+                    >
+                      {copied ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
                     <Badge variant="outline" className="text-xs">
                       Level {user.level}
                     </Badge>
