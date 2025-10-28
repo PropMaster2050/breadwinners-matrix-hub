@@ -37,11 +37,12 @@ export const useNetworkTree = (stageNumber: number) => {
     try {
       setLoading(true);
 
-      // Fetch direct recruits from network_tree using correct user.id field
+      // Fetch ALL 6 direct recruits from network_tree
       const { data: directRecruits, error: networkError } = await supabase
         .from('network_tree')
         .select(`
           user_id,
+          created_at,
           profiles!inner(
             user_id,
             full_name,
@@ -51,29 +52,20 @@ export const useNetworkTree = (stageNumber: number) => {
             created_at
           )
         `)
-        .eq('parent_id', user.id);
+        .eq('parent_id', user.id)
+        .order('created_at', { ascending: true });
 
-      if (networkError) throw networkError;
+      if (networkError) {
+        console.error('Network tree fetch error:', networkError);
+        throw networkError;
+      }
 
-      // For each direct recruit, fetch their downlines (grandchildren)
+      console.log('Direct recruits found:', directRecruits?.length || 0);
+
+      // For each direct recruit, fetch their commission data
       const treeWithDownlines = await Promise.all(
         (directRecruits || []).map(async (recruit: any) => {
-          const { data: grandchildren } = await supabase
-            .from('network_tree')
-            .select(`
-              user_id,
-              profiles!inner(
-                user_id,
-                full_name,
-                username,
-                avatar_url,
-                current_stage,
-                created_at
-              )
-            `)
-            .eq('parent_id', recruit.user_id);
-
-          // Fetch stage completion and commission data
+          // Fetch stage completion data
           const { data: completions } = await supabase
             .from('stage_completions')
             .select('stage_number, completed_at')
@@ -81,13 +73,16 @@ export const useNetworkTree = (stageNumber: number) => {
             .order('stage_number', { ascending: false })
             .limit(1);
 
+          // Fetch commission data for this recruit
           const { data: commission } = await supabase
             .from('commissions')
-            .select('amount, stage_number')
+            .select('amount, stage_number, created_at')
             .eq('upline_user_id', user.id)
             .eq('recruit_user_id', recruit.user_id)
             .eq('stage_number', stageNumber)
             .maybeSingle();
+
+          console.log('Commission for recruit', recruit.profiles.username, ':', commission);
 
           return {
             id: recruit.user_id,
@@ -99,16 +94,7 @@ export const useNetworkTree = (stageNumber: number) => {
             joined_at: recruit.profiles.created_at,
             stage_completed: completions?.[0]?.stage_number || 0,
             commission_earned: commission?.amount || 0,
-            downlines: (grandchildren || []).map((gc: any) => ({
-              id: gc.user_id,
-              user_id: gc.user_id,
-              full_name: gc.profiles.full_name,
-              username: gc.profiles.username,
-              avatar_url: gc.profiles.avatar_url,
-              current_stage: gc.profiles.current_stage,
-              joined_at: gc.profiles.created_at,
-              downlines: []
-            }))
+            downlines: [] // Removed grandchildren for 6-person direct model
           };
         })
       );
@@ -158,11 +144,8 @@ export const useNetworkTree = (stageNumber: number) => {
     let completedRecruits = 0;
 
     if (stage === 1) {
-      // Stage 1: count all 6 positions in 2x2 matrix
+      // Stage 1: count all direct recruits (up to 6)
       totalRecruits = tree.length;
-      tree.forEach(member => {
-        totalRecruits += member.downlines.length;
-      });
       completedRecruits = totalRecruits;
     } else {
       // Stages 2-6: count only those who completed previous stage

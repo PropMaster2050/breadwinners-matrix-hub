@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,7 +34,12 @@ const provinces = [
 
 const MultiStepRegistration = () => {
   const { register } = useAuth();
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
+  
+  // Get referral code from URL parameter
+  const referralCodeFromUrl = searchParams.get('ref') || '';
+  
   const [formData, setFormData] = useState<RegisterData>({
     fullName: "",
     username: "",
@@ -48,7 +53,7 @@ const MultiStepRegistration = () => {
     province: "",
     age: "",
     gender: "",
-    sponsorId: "",
+    sponsorId: referralCodeFromUrl,
     epin: ""
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -366,16 +371,21 @@ const MultiStepRegistration = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="sponsorId">Sponsor ID (Optional)</Label>
+                    <Label htmlFor="sponsorId">
+                      Referral Code {referralCodeFromUrl && <span className="text-success">(Pre-filled from link)</span>}
+                    </Label>
                     <Input
                       id="sponsorId"
                       name="sponsorId"
                       type="text"
-                      placeholder="Enter sponsor member ID"
+                      placeholder="Enter referral code (e.g. BW123456)"
                       value={formData.sponsorId}
                       onChange={handleInputChange}
                       className="h-11"
                     />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your sponsor's referral code to join their network
+                    </p>
                   </div>
 
                   {!validateStep1() || !validatePasswords() ? (

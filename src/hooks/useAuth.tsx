@@ -24,6 +24,7 @@ export interface User {
   totalRecruits: number;
   isActive: boolean;
   joinDate: string;
+  ownReferralCode?: string;
   bankDetails?: {
     bankName: string;
     accountNumber: string;
@@ -120,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         username: profileData.username,
         email: profileData.email,
         mobile: profileData.phone || '',
+        sponsorId: profileData.referrer_code || undefined,
         level: networkData?.level || 1,
         stage: networkData?.stage || 1,
         earnings: walletData?.total_earned || 0,
@@ -131,7 +133,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           eWallet: walletData?.e_wallet_balance || 0,
           registrationWallet: walletData?.registration_wallet_balance || 250,
           incentiveWallet: walletData?.incentive_wallet_balance || 0
-        }
+        },
+        uplineId: networkData?.parent_id || undefined,
+        // Add referral code for sharing
+        ownReferralCode: profileData.own_referral_code
       };
 
       setUser(baseUser);

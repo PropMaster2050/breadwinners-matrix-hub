@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 import { MembershipCard } from "@/components/MembershipCard";
+import { ReferralLink } from "@/components/ReferralLink";
 import { 
   Users, 
   TrendingUp, 
@@ -101,6 +102,13 @@ const Dashboard = () => {
         </div>
         <p className="text-xs text-muted-foreground">Share this ID with people you recruit</p>
       </div>
+
+      {/* Referral Link - Prominent Display */}
+      {user.ownReferralCode && (
+        <div className="mb-6">
+          <ReferralLink referralCode={user.ownReferralCode} />
+        </div>
+      )}
 
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
