@@ -156,43 +156,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         navigate(isUserAdmin ? '/admin' : '/dashboard');
         return true;
 
-        // Regular user login
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*, wallets(*), network_tree(*)')
-          .eq('user_id', data.user.id)
-          .single();
-
-        if (profileData) {
-          const wallets = Array.isArray(profileData.wallets) ? profileData.wallets[0] : null;
-          const networkTree = Array.isArray(profileData.network_tree) ? profileData.network_tree[0] : null;
-          
-          const userData: User = {
-            id: data.user.id,
-            memberId: profileData.id,
-            fullName: profileData.full_name,
-            username: profileData.username,
-            email: profileData.email,
-            mobile: profileData.phone || '',
-            level: networkTree?.level || 1,
-            stage: networkTree?.stage || 1,
-            earnings: wallets?.total_earned || 0,
-            directRecruits: profileData.direct_recruits || 0,
-            totalRecruits: profileData.total_recruits || 0,
-            isActive: true,
-            joinDate: profileData.created_at,
-            wallets: {
-              eWallet: wallets?.e_wallet_balance || 0,
-              registrationWallet: wallets?.registration_wallet_balance || 250,
-              incentiveWallet: wallets?.incentive_wallet_balance || 0
-            }
-          };
-          setUser(userData);
-          localStorage.setItem('breadwinners_user', JSON.stringify(userData));
-          toast({ title: `Welcome back, ${profileData.full_name}!` });
-          navigate('/dashboard');
-          return true;
-        }
       }
 
       // Removed insecure hardcoded admin fallback. Please use Supabase email/password login.

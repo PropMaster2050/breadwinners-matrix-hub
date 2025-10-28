@@ -21,12 +21,12 @@ interface EPin {
 }
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [epinQuantity, setEpinQuantity] = useState(10);
   const [generatedEPins, setGeneratedEPins] = useState<EPin[]>([]);
 
-  if (!user || user.username !== 'admin') return null;
+  if (!isAdmin) return null;
 
   // Generate unique e-pin codes
   const generateEPinCode = () => {

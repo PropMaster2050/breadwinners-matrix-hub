@@ -19,7 +19,7 @@ interface WithdrawalRequest {
 }
 
 const AdminPayouts = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
 
   useEffect(() => {
@@ -89,7 +89,7 @@ const AdminPayouts = () => {
     loadWithdrawals();
   };
 
-  if (!user || user.username !== 'admin') return null;
+  if (!isAdmin) return null;
 
   const pendingWithdrawals = withdrawals.filter(w => w.status === 'pending');
   const completedWithdrawals = withdrawals.filter(w => w.status === 'completed');
