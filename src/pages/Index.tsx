@@ -31,7 +31,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 animate-fade-in">
       <div className="w-full max-w-md">
         <Card className="shadow-xl border-0 bg-white/95 backdrop-blur">
           <CardHeader className="text-center pb-8 pt-8">
