@@ -324,11 +324,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // 2) Create auth user. Supabase may require email confirmation.
+      // 2) Create auth user with alias to allow multi-account per email
       console.log('Creating auth user');
       const redirectUrl = `${window.location.origin}/login`;
+      const realEmail = (userData.email || '').trim();
+      const aliasEmail = `${userData.username.toLowerCase().replace(/\s+/g, '')}+${Date.now()}@breadwinners.app`;
+      
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: (userData.email || '').trim(),
+        email: aliasEmail,
         password: (userData.password || '').trim(),
         options: {
           emailRedirectTo: redirectUrl,
@@ -342,7 +345,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             physical_address: userData.physicalAddress,
             province: userData.province,
             age: userData.age,
-            gender: userData.gender
+            gender: userData.gender,
+            real_email: realEmail
           }
         }
       });
