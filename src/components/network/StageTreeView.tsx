@@ -25,8 +25,8 @@ export const StageTreeView = ({
       .slice(0, 2);
   };
 
-  // Show all 6 direct recruits (not 2x2 matrix)
-  const directRecruits = networkTree.slice(0, 6);
+  // 2x2 matrix: show only first 2 direct recruits (children)
+  const directRecruits = networkTree.slice(0, 2);
 
   return (
     <div className="flex flex-col items-center space-y-6 md:space-y-12 py-4 md:py-8">
@@ -60,9 +60,9 @@ export const StageTreeView = ({
       {/* Vertical connecting line */}
       <div className="w-0.5 h-6 md:h-12 bg-gradient-to-b from-primary to-primary/50 -my-3 md:-my-6" />
 
-      {/* Level 1: Direct Recruits (6 positions) */}
-      <div className="relative grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-12">
-        {directRecruits.map((member, index) => (
+      {/* Level 1: Two direct recruits (2x2 matrix) */}
+      <div className="relative grid grid-cols-2 gap-6 md:gap-12">
+        {directRecruits.map((member, idx) => (
           <div key={member.id} className="flex flex-col items-center space-y-4">
             {/* Direct recruit */}
             <TreeNode 
@@ -71,39 +71,51 @@ export const StageTreeView = ({
               level={1}
               onMemberClick={onMemberClick}
             />
-            
-            {/* Show their recruits (grandchildren) if any */}
-            {member.downlines && member.downlines.length > 0 && (
-              <>
-                <div className="w-0.5 h-4 bg-gradient-to-b from-primary to-primary/50" />
-                <div className="flex gap-2">
-                  {member.downlines.slice(0, 6).map((downline) => (
-                    <div key={downline.id} className="w-12 md:w-16">
-                      <TreeNode 
-                        member={downline} 
-                        stageNumber={stageNumber} 
-                        level={2}
-                        onMemberClick={onMemberClick}
-                      />
-                    </div>
-                  ))}
+
+            {/* Show exactly up to two recruits under each direct recruit (grandchildren) */}
+            <div className="w-0.5 h-4 bg-gradient-to-b from-primary to-primary/50" />
+            <div className="grid grid-cols-2 gap-2">
+              {member.downlines?.slice(0, 2).map((downline) => (
+                <div key={downline.id} className="w-12 md:w-16">
+                  <TreeNode 
+                    member={downline} 
+                    stageNumber={stageNumber} 
+                    level={2}
+                    onMemberClick={onMemberClick}
+                  />
                 </div>
-              </>
-            )}
+              ))}
+
+              {/* Empty grandchild slots to complete 2 under each branch */}
+              {Array.from({ length: Math.max(0, 2 - (member.downlines?.slice(0, 2).length || 0)) }).map((_, emptyIdx) => (
+                <div key={`empty-gc-${idx}-${emptyIdx}`} className="flex flex-col items-center">
+                  <EmptySlot 
+                    stageNumber={stageNumber}
+                    position={idx === 0 ? 3 + emptyIdx : 5 + emptyIdx}
+                  />
+                </div>
+              ))}
+            </div>
           </div>
         ))}
 
-        {/* Empty slots for remaining positions (up to 6 total) */}
-        {directRecruits.length < 6 && (
+        {/* Empty direct recruit slots (positions 1-2) */}
+        {directRecruits.length < 2 && (
           <>
-            {[...Array(6 - directRecruits.length)].map((_, index) => (
-              <div key={`empty-direct-${index}`} className="flex flex-col items-center">
-                <EmptySlot 
-                  stageNumber={stageNumber}
-                  position={directRecruits.length + index + 1}
-                />
-              </div>
-            ))}
+            {Array.from({ length: 2 - directRecruits.length }).map((_, i) => {
+              const pos = directRecruits.length + i + 1; // 1 or 2
+              const gcStart = pos === 1 ? 3 : 5;
+              return (
+                <div key={`empty-direct-${i}`} className="flex flex-col items-center space-y-4">
+                  <EmptySlot stageNumber={stageNumber} position={pos} />
+                  <div className="w-0.5 h-4 bg-gradient-to-b from-primary to-primary/50" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <EmptySlot stageNumber={stageNumber} position={gcStart} />
+                    <EmptySlot stageNumber={stageNumber} position={gcStart + 1} />
+                  </div>
+                </div>
+              );
+            })}
           </>
         )}
       </div>
