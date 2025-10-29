@@ -13,6 +13,7 @@ export interface NetworkMember {
   downlines: NetworkMember[];
   commission_earned?: number;
   stage_completed?: number;
+  is_locked?: boolean; // Locked if hasn't completed previous stage
 }
 
 export interface StageData {
@@ -81,6 +82,12 @@ export const useNetworkTree = (stageNumber: number) => {
             .order('stage_number', { ascending: false })
             .limit(1);
 
+          const highestStageCompleted = completions?.[0]?.stage_number || 0;
+          
+          // Check if this recruit is "locked" for current stage view
+          // Locked if they haven't completed the previous stage
+          const isLocked = stageNumber > 1 && highestStageCompleted < (stageNumber - 1);
+
           // Fetch commission data for this recruit
           const { data: commission } = await supabase
             .from('commissions')
@@ -125,26 +132,19 @@ export const useNetworkTree = (stageNumber: number) => {
             avatar_url: profile?.avatar_url,
             current_stage: profile?.current_stage || 1,
             joined_at: profile?.created_at || recruit.created_at,
-            stage_completed: completions?.[0]?.stage_number || 0,
+            stage_completed: highestStageCompleted,
             commission_earned: commission?.amount || 0,
+            is_locked: isLocked,
             downlines
           };
         })
       );
 
-      // Filter based on stage view
-      let filteredTree = treeWithDownlines;
-      if (stageNumber > 1) {
-        // For stages 2-6, only show recruits who completed the previous stage
-        filteredTree = treeWithDownlines.filter(
-          (member: any) => member.stage_completed >= (stageNumber - 1)
-        );
-      }
-
-      setNetworkTree(filteredTree);
+      // For Stage 2-6, show ALL 6 Stage 1 recruits (both locked and unlocked)
+      setNetworkTree(treeWithDownlines);
 
       // Calculate stage-specific data
-      await calculateStageData(filteredTree, stageNumber);
+      await calculateStageData(treeWithDownlines, stageNumber);
     } catch (error) {
       console.error('Error fetching network tree:', error);
     } finally {
@@ -181,11 +181,11 @@ export const useNetworkTree = (stageNumber: number) => {
       totalRecruits = tree.length;
       completedRecruits = totalRecruits;
     } else {
-      // Stages 2-6: count only those who completed previous stage
+      // Stages 2-6: total is always 6, but only count unlocked (completed previous stage)
+      totalRecruits = tree.length;
       completedRecruits = tree.filter(
-        (m: any) => m.stage_completed >= (stage - 1)
+        (m: any) => !m.is_locked && m.stage_completed >= (stage - 1)
       ).length;
-      totalRecruits = completedRecruits;
     }
 
     const totalEarned = completedRecruits * perRecruitAmount;

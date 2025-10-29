@@ -10,9 +10,10 @@ interface TreeNodeProps {
   stageNumber: number;
   level: number;
   onMemberClick?: (memberId: string) => void;
+  isLocked?: boolean;
 }
 
-export const TreeNode = ({ member, stageNumber, level, onMemberClick }: TreeNodeProps) => {
+export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }: TreeNodeProps) => {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -24,9 +25,10 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick }: TreeNode
 
   const stageProgress = (member.current_stage / 6) * 100;
   const isCompleted = member.stage_completed && member.stage_completed >= stageNumber;
+  const locked = isLocked || member.is_locked;
 
   return (
-    <div className="relative flex flex-col items-center animate-fade-in">
+    <div className={`relative flex flex-col items-center animate-fade-in ${locked ? 'opacity-40' : ''}`}>
       {/* Connecting line from parent */}
       {level > 0 && (
         <div 
@@ -37,11 +39,24 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick }: TreeNode
       
       {/* Member Card */}
       <Card
-        className="relative w-32 md:w-52 p-2 md:p-4 cursor-pointer hover:shadow-xl transition-all duration-300 hover:scale-105 group border hover:border-primary bg-gradient-to-br from-card to-card/80"
-        onClick={() => onMemberClick?.(member.user_id)}
+        className={`relative w-32 md:w-52 p-2 md:p-4 transition-all duration-300 group border bg-gradient-to-br from-card to-card/80 ${
+          locked 
+            ? 'cursor-not-allowed grayscale border-muted' 
+            : 'cursor-pointer hover:shadow-xl hover:scale-105 hover:border-primary'
+        }`}
+        onClick={() => !locked && onMemberClick?.(member.user_id)}
       >
+        {/* Locked Badge */}
+        {locked && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
+            <Badge className="bg-muted text-muted-foreground text-[8px] md:text-xs font-bold">
+              🔒 Locked
+            </Badge>
+          </div>
+        )}
+
         {/* Completion Badge */}
-        {isCompleted && (
+        {!locked && isCompleted && (
           <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 z-10">
             <div className="bg-primary rounded-full p-0.5 md:p-1 shadow-lg">
               <CheckCircle2 className="h-3 w-3 md:h-5 md:w-5 text-primary-foreground" />
@@ -50,7 +65,7 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick }: TreeNode
         )}
 
         {/* Commission Badge */}
-        {member.commission_earned && member.commission_earned > 0 && (
+        {!locked && member.commission_earned && member.commission_earned > 0 && (
           <div className="absolute -top-2 -left-2 md:-top-3 md:-left-3 z-10">
             <Badge className="bg-warning text-warning-foreground text-[8px] md:text-xs font-bold shadow-lg px-1 md:px-2 py-0 md:py-1">
               +R{member.commission_earned}
@@ -98,9 +113,11 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick }: TreeNode
         </div>
 
         {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-          <span className="text-[8px] md:text-xs font-medium text-primary">View Details</span>
-        </div>
+        {!locked && (
+          <div className="absolute inset-0 bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <span className="text-[8px] md:text-xs font-medium text-primary">View Details</span>
+          </div>
+        )}
       </Card>
     </div>
   );
