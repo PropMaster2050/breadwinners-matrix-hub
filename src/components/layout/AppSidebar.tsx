@@ -100,11 +100,11 @@ export function AppSidebar() {
                     tooltip={isCollapsed ? item.title : undefined}
                     className="w-full h-auto p-0 bg-transparent hover:bg-transparent"
                   >
-                    <NavLink 
+                     <NavLink 
                       to={item.url}
                       onClick={handleLinkClick}
                       className={({ isActive }) => 
-                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ease-in-out ${
+                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-500 ease-in-out ${
                           isActive 
                             ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg" 
                             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -135,7 +135,7 @@ export function AppSidebar() {
                         isNetworkActive ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg rounded-xl" : ""
                       }`}
                     >
-                      <div className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 w-full ${
+                       <div className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-500 w-full ${
                         isNetworkActive 
                           ? "bg-sidebar-primary text-sidebar-primary-foreground" 
                           : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -143,7 +143,7 @@ export function AppSidebar() {
                         <Network className="h-5 w-5 flex-shrink-0" />
                         {!isCollapsed && <span className="font-medium">My Network</span>}
                         {!isCollapsed && (
-                          <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                          <ChevronDown className="ml-auto h-4 w-4 transition-transform duration-500 group-data-[state=open]/collapsible:rotate-180" />
                         )}
                       </div>
                     </SidebarMenuButton>
@@ -154,11 +154,11 @@ export function AppSidebar() {
                         {networkStages.map((stage) => (
                           <SidebarMenuSubItem key={stage.title}>
                             <SidebarMenuSubButton asChild>
-                              <NavLink 
+                               <NavLink 
                                 to={stage.url}
                                 onClick={handleLinkClick}
                                 className={({ isActive }) => 
-                                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ease-in-out ${
+                                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-500 ease-in-out ${
                                     isActive 
                                       ? "bg-sidebar-primary/80 text-sidebar-primary-foreground shadow-md" 
                                       : "text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
@@ -189,7 +189,7 @@ export function AppSidebar() {
                       to={item.url}
                       onClick={handleLinkClick}
                       className={({ isActive }) => 
-                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200 ease-in-out ${
+                        `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-500 ease-in-out ${
                           isActive 
                             ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-lg" 
                             : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"

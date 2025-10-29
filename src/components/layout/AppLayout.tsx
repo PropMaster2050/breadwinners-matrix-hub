@@ -14,7 +14,9 @@ export function AppLayout({ children }: AppLayoutProps) {
         <SidebarInset className="relative z-10 flex-1">
           <Header />
           <main className="flex-1 p-6 animate-fade-in">
-            {children}
+            <div className="max-w-7xl mx-auto w-full">
+              {children}
+            </div>
           </main>
         </SidebarInset>
       </div>
