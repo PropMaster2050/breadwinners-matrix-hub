@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, CreditCard, User, MapPin, Shield, ArrowLeft, ArrowRight } from "lucide-react";
 import breadwinnersLogo from "@/assets/breadwinners-logo.png";
+import voucherLogo from "@/assets/1voucher-logo.png";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 
@@ -165,6 +166,15 @@ const MultiStepRegistration = () => {
 
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="text-center">
+            {step === 2 && (
+              <div className="flex justify-center mb-4">
+                <img 
+                  src={voucherLogo} 
+                  alt="1voucher" 
+                  className="h-20 w-auto rounded-lg"
+                />
+              </div>
+            )}
             <CardTitle className="text-2xl font-bold">
               {step === 1 ? "Personal Details" : "Voucher Purchase"}
             </CardTitle>
@@ -189,7 +199,7 @@ const MultiStepRegistration = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {step === 1 && (
-                <>
+                <div className="transition-opacity duration-700 ease-in-out opacity-100">
                   <div className="space-y-2">
                     <Label htmlFor="fullName">Full Name *</Label>
                     <Input
@@ -428,11 +438,11 @@ const MultiStepRegistration = () => {
                     Continue to Voucher
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
-                </>
+                </div>
               )}
 
               {step === 2 && (
-                <>
+                <div className="transition-opacity duration-700 ease-in-out opacity-100">
                   <div className="space-y-3 p-4 bg-primary/5 rounded-lg border border-primary/20 mb-4">
                     <h3 className="font-semibold text-foreground flex items-center gap-2">
                       <CreditCard className="h-5 w-5 text-primary" />
@@ -493,7 +503,7 @@ const MultiStepRegistration = () => {
                       {isLoading ? "Processing..." : "Join Network"}
                     </Button>
                   </div>
-                </>
+                </div>
               )}
 
               <div className="text-center pt-4 border-t border-border">
