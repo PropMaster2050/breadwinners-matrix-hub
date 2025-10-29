@@ -11,17 +11,17 @@ export function PageTransition({ children }: PageTransitionProps) {
   const [transitionStage, setTransitionStage] = useState("fadeIn");
 
   useEffect(() => {
-    if (location !== displayLocation) {
+    if (location.pathname !== displayLocation.pathname) {
       setTransitionStage("fadeOut");
     }
-  }, [location, displayLocation]);
+  }, [location.pathname, displayLocation.pathname]);
 
   return (
     <div
-      className={`${
-        transitionStage === "fadeOut" ? "animate-fade-out" : "animate-fade-in"
+      className={`transition-opacity duration-500 ${
+        transitionStage === "fadeOut" ? "opacity-0" : "opacity-100"
       }`}
-      onAnimationEnd={() => {
+      onTransitionEnd={() => {
         if (transitionStage === "fadeOut") {
           setTransitionStage("fadeIn");
           setDisplayLocation(location);
