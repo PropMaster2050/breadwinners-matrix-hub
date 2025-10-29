@@ -38,20 +38,10 @@ export const useNetworkTree = (stageNumber: number) => {
       setLoading(true);
 
       // Fetch ALL 6 direct recruits from network_tree
-      const { data: directRecruits, error: networkError } = await supabase
+      // Fetch direct links from network_tree (no embedded join to avoid RLS join issues)
+      const { data: directLinks, error: networkError } = await supabase
         .from('network_tree')
-        .select(`
-          user_id,
-          created_at,
-          profiles!inner(
-            user_id,
-            full_name,
-            username,
-            avatar_url,
-            current_stage,
-            created_at
-          )
-        `)
+        .select('user_id, created_at, parent_id')
         .eq('parent_id', user.id)
         .order('created_at', { ascending: true });
 
@@ -60,11 +50,29 @@ export const useNetworkTree = (stageNumber: number) => {
         throw networkError;
       }
 
-      console.log('Direct recruits found:', directRecruits?.length || 0);
+      const directIds = (directLinks || []).map((r: any) => r.user_id);
 
-      // For each direct recruit, fetch their commission data AND their recruits
+      // Fetch profiles for direct recruits
+      let directProfiles: any[] = [];
+      if (directIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, full_name, username, avatar_url, current_stage, created_at')
+          .in('user_id', directIds);
+        if (profilesError) {
+          console.error('Profiles fetch error:', profilesError);
+          throw profilesError;
+        }
+        directProfiles = profilesData || [];
+      }
+
+      const profileById = new Map(directProfiles.map((p: any) => [p.user_id, p]));
+
+      // Build tree with downlines
       const treeWithDownlines = await Promise.all(
-        (directRecruits || []).map(async (recruit: any) => {
+        (directLinks || []).map(async (recruit: any) => {
+          const profile = profileById.get(recruit.user_id);
+
           // Fetch stage completion data
           const { data: completions } = await supabase
             .from('stage_completions')
@@ -82,48 +90,44 @@ export const useNetworkTree = (stageNumber: number) => {
             .eq('stage_number', stageNumber)
             .maybeSingle();
 
-          // Fetch their recruits (grandchildren)
-          const { data: grandchildren } = await supabase
+          // Fetch grandchildren (links then profiles)
+          const { data: grandchildrenLinks } = await supabase
             .from('network_tree')
-            .select(`
-              user_id,
-              created_at,
-              profiles!inner(
-                user_id,
-                full_name,
-                username,
-                avatar_url,
-                current_stage,
-                created_at
-              )
-            `)
+            .select('user_id, created_at, parent_id')
             .eq('parent_id', recruit.user_id)
             .order('created_at', { ascending: true });
 
-          const downlines = (grandchildren || []).map((gc: any) => ({
-            id: gc.user_id,
-            user_id: gc.user_id,
-            full_name: gc.profiles.full_name,
-            username: gc.profiles.username,
-            avatar_url: gc.profiles.avatar_url,
-            current_stage: gc.profiles.current_stage,
-            joined_at: gc.profiles.created_at,
-            downlines: []
-          }));
+          let downlines: any[] = [];
+          const grandchildIds = (grandchildrenLinks || []).map((gc: any) => gc.user_id);
+          if (grandchildIds.length > 0) {
+            const { data: gcProfiles } = await supabase
+              .from('profiles')
+              .select('user_id, full_name, username, avatar_url, current_stage, created_at')
+              .in('user_id', grandchildIds);
 
-          console.log('Recruit', recruit.profiles.username, 'has', downlines.length, 'downlines');
+            downlines = (gcProfiles || []).map((gc: any) => ({
+              id: gc.user_id,
+              user_id: gc.user_id,
+              full_name: gc.full_name,
+              username: gc.username,
+              avatar_url: gc.avatar_url,
+              current_stage: gc.current_stage,
+              joined_at: gc.created_at,
+              downlines: []
+            }));
+          }
 
           return {
             id: recruit.user_id,
             user_id: recruit.user_id,
-            full_name: recruit.profiles.full_name,
-            username: recruit.profiles.username,
-            avatar_url: recruit.profiles.avatar_url,
-            current_stage: recruit.profiles.current_stage,
-            joined_at: recruit.profiles.created_at,
+            full_name: profile?.full_name || '',
+            username: profile?.username || '',
+            avatar_url: profile?.avatar_url,
+            current_stage: profile?.current_stage || 1,
+            joined_at: profile?.created_at || recruit.created_at,
             stage_completed: completions?.[0]?.stage_number || 0,
             commission_earned: commission?.amount || 0,
-            downlines: downlines
+            downlines
           };
         })
       );
@@ -221,6 +225,17 @@ export const useNetworkTree = (stageNumber: number) => {
           event: '*',
           schema: 'public',
           table: 'commissions'
+        },
+        () => {
+          fetchNetworkTree();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'network_tree'
         },
         () => {
           fetchNetworkTree();
