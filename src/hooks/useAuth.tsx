@@ -216,15 +216,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const cleanUsername = username.trim();
       const cleanPassword = password.trim();
       
-      let email = cleanUsername;
-      let isAdminLogin = false;
-      
-      // Check if this is admin login (contains @)
+      let email: string;
       if (cleanUsername.includes('@')) {
-        isAdminLogin = true;
+        // Allow email login for all users
         email = cleanUsername;
       } else {
-        // For regular users, resolve email using secure RPC (supports username or BWN ID, case-insensitive)
+        // Resolve email using secure RPC (supports username or BWN ID, case-insensitive)
         const { data: resolvedEmail, error: rpcError } = await supabase
           .rpc('get_email_for_login', { identifier: cleanUsername });
         
@@ -236,7 +233,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           });
           return false;
         }
-        
         email = resolvedEmail;
       }
       
@@ -256,17 +252,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
 
         const isUserAdmin = !!roleData;
-
-        // If attempting email login but not admin, block and sign out
-        if (isAdminLogin && !isUserAdmin) {
-          await supabase.auth.signOut();
-          toast({
-            title: "Login blocked",
-            description: "Please use your username to log in.",
-            variant: "destructive"
-          });
-          return false;
-        }
 
         // Hydrate user profile and roles safely
         const hydrated = await hydrateUserFromSupabase(data.user.id);
