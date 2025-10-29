@@ -51,8 +51,10 @@ interface AuthContextType {
   login: (username: string, password: string) => Promise<boolean>;
   register: (userData: RegisterData) => Promise<boolean>;
   logout: () => void;
+  resetPassword: (email: string) => Promise<boolean>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isLoading: boolean;
 }
 
 interface RegisterData {
@@ -84,8 +86,10 @@ export const useAuth = () => {
       login: async () => false,
       register: async () => false,
       logout: () => {},
+      resetPassword: async () => false,
       isAuthenticated: false,
       isAdmin: false,
+      isLoading: true,
     } as AuthContextType;
   }
   return context;
@@ -95,6 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const hydrateUserFromSupabase = async (userId: string): Promise<User | null> => {
     try {
@@ -155,11 +160,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         // Defer any Supabase calls to avoid deadlocks
         setTimeout(() => {
-          hydrateUserFromSupabase(session.user!.id);
+          hydrateUserFromSupabase(session.user!.id).finally(() => setIsLoading(false));
         }, 0);
       } else {
         setUser(null);
         setIsAdmin(false);
+        setIsLoading(false);
         localStorage.removeItem('breadwinners_user');
       }
     });
@@ -168,8 +174,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setTimeout(() => {
-          hydrateUserFromSupabase(session.user!.id);
+          hydrateUserFromSupabase(session.user!.id).finally(() => setIsLoading(false));
         }, 0);
+      } else {
+        setIsLoading(false);
       }
     });
 
@@ -402,6 +410,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     navigate('/');
   };
 
+  const resetPassword = async (email: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        toast({
+          title: "Password reset failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        return false;
+      }
+
+      toast({
+        title: "Check your email",
+        description: "We've sent you a password reset link. Please check your inbox and spam folder.",
+      });
+      return true;
+    } catch (error) {
+      console.error('Password reset error:', error);
+      toast({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
   const isAuthenticated = !!user;
 
   return (
@@ -410,8 +449,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       register,
       logout,
+      resetPassword,
       isAuthenticated,
-      isAdmin
+      isAdmin,
+      isLoading
     }}>
       {children}
     </AuthContext.Provider>
