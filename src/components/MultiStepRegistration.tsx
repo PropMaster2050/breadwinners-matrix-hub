@@ -79,15 +79,17 @@ const MultiStepRegistration = () => {
   };
 
   const validatePasswords = () => {
-    return formData.password === formData.confirmPassword && 
-           formData.transactionPin === formData.confirmTransactionPin &&
-           formData.password.length >= 6 && 
-           formData.transactionPin.length === 4;
+    return (
+      formData.password === formData.confirmPassword &&
+      formData.transactionPin === formData.confirmTransactionPin &&
+      formData.password.length >= 8 &&
+      formData.transactionPin.length === 4
+    );
   };
 
   const getValidationErrors = () => {
-    const errors = [];
-    if (formData.password.length < 6) errors.push("Password must be at least 6 characters");
+    const errors: string[] = [];
+    if (formData.password.length < 8) errors.push("Password must be at least 8 characters");
     if (formData.transactionPin.length !== 4) errors.push("Transaction PIN must be exactly 4 digits");
     if (formData.password !== formData.confirmPassword) errors.push("Passwords don't match");
     if (formData.transactionPin !== formData.confirmTransactionPin) errors.push("Transaction PINs don't match");
@@ -118,20 +120,23 @@ const MultiStepRegistration = () => {
         age: formData.age ? parseInt(formData.age) : undefined
       };
 
-      // Safety timeout: avoid getting stuck if network hangs
-      const result = await Promise.race([
-        register(registrationData),
-        new Promise<boolean>((resolve) => {
-          setTimeout(() => resolve(false), 15000);
-        }),
-      ]);
-
-      if (result === false) {
+      // Safety timeout with clearer UX
+      let didTimeout = false;
+      const timeoutId = setTimeout(() => {
+        didTimeout = true;
         toast({
           title: "Registration taking longer than expected",
           description: "Please check your E-Pin and internet connection, then try again.",
           variant: "destructive",
         });
+      }, 15000);
+
+      const ok = await register(registrationData);
+      clearTimeout(timeoutId);
+
+      // If it timed out, we already showed a toast; avoid double messages
+      if (!didTimeout) {
+        // When ok is false, register() already showed a specific error toast
       }
     } catch (err) {
       toast({
@@ -236,7 +241,7 @@ const MultiStepRegistration = () => {
                           id="password"
                           name="password"
                           type={showPassword ? "text" : "password"}
-                          placeholder="Min 6 characters"
+                          placeholder="Min 8 characters"
                           value={formData.password}
                           onChange={handleInputChange}
                           required
