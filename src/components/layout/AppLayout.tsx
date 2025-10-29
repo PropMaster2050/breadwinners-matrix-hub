@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Header } from "./Header";
+import { PageTransition } from "../PageTransition";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -13,10 +14,12 @@ export function AppLayout({ children }: AppLayoutProps) {
         <AppSidebar />
         <SidebarInset className="relative z-10 flex-1">
           <Header />
-          <main className="flex-1 p-6 animate-fade-in">
-            <div className="max-w-7xl mx-auto w-full">
-              {children}
-            </div>
+          <main className="flex-1 p-4 sm:p-6">
+            <PageTransition>
+              <div className="max-w-7xl mx-auto w-full px-2 sm:px-0">
+                {children}
+              </div>
+            </PageTransition>
           </main>
         </SidebarInset>
       </div>
