@@ -17,37 +17,57 @@ const TeamReport = () => {
       try {
         setLoading(true);
         
-        // Fetch all profiles with their network tree and wallet data
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select(`
-            *,
-            wallets(*),
-            network_tree(*)
-          `);
+        // Fetch direct recruits
+        const { data: directLinks, error: directError } = await supabase
+          .from('network_tree')
+          .select('user_id, level, stage, created_at')
+          .eq('parent_id', user.id);
 
-        if (error) {
-          console.error('Error fetching network members:', error);
+        if (directError) {
+          console.error('Error fetching direct network:', directError);
           return;
         }
 
-        if (profiles) {
-          // Transform profiles to match the expected format
-          const members = profiles
-            .filter((profile: any) => {
-              // Include users who have the current user as parent in network tree
-              return profile.network_tree?.some((nt: any) => nt.parent_id === user.id);
-            })
-            .map((profile: any) => ({
-              fullName: profile.full_name,
-              memberId: profile.id,
-              level: profile.network_tree?.[0]?.level || 1,
-              stage: profile.network_tree?.[0]?.stage || 1,
-              isActive: true,
-              joinDate: profile.created_at,
-              directRecruits: profile.direct_recruits,
-              totalRecruits: profile.total_recruits
-            }));
+        const allMemberIds = directLinks?.map((link: any) => link.user_id) || [];
+
+        // Fetch indirect recruits (downlines of directs)
+        if (allMemberIds.length > 0) {
+          const { data: indirectLinks } = await supabase
+            .from('network_tree')
+            .select('user_id, level, stage, created_at')
+            .in('parent_id', allMemberIds);
+
+          if (indirectLinks && indirectLinks.length > 0) {
+            indirectLinks.forEach((link: any) => {
+              if (!allMemberIds.includes(link.user_id)) {
+                allMemberIds.push(link.user_id);
+              }
+            });
+          }
+        }
+
+        // Fetch profiles for all members
+        if (allMemberIds.length > 0) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('*')
+            .in('user_id', allMemberIds);
+
+          if (profilesError) {
+            console.error('Error fetching profiles:', profilesError);
+            return;
+          }
+
+          const members = profiles?.map((profile: any) => ({
+            fullName: profile.full_name,
+            memberId: profile.user_id,
+            level: profile.current_stage,
+            stage: profile.current_stage,
+            isActive: true,
+            joinDate: profile.created_at,
+            directRecruits: profile.direct_recruits,
+            totalRecruits: profile.total_recruits
+          })) || [];
 
           setAllNetworkMembers(members);
         }

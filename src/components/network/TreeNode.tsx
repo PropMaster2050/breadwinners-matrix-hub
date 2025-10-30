@@ -39,7 +39,7 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
       
       {/* Member Card */}
       <Card
-        className={`relative w-32 md:w-52 p-2 md:p-4 transition-all duration-300 group border bg-gradient-to-br from-card to-card/80 ${
+        className={`relative w-24 md:w-40 p-1.5 md:p-3 transition-all duration-300 group border bg-gradient-to-br from-card to-card/80 ${
           locked 
             ? 'cursor-not-allowed grayscale border-muted' 
             : 'cursor-pointer hover:shadow-xl hover:scale-105 hover:border-primary'
@@ -74,10 +74,10 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
         )}
 
         {/* Avatar */}
-        <div className="flex justify-center mb-1 md:mb-3">
-          <Avatar className="h-10 w-10 md:h-16 md:w-16 border-2 md:border-4 border-primary/20 group-hover:border-primary transition-all">
+        <div className="flex justify-center mb-1 md:mb-2">
+          <Avatar className="h-8 w-8 md:h-12 md:w-12 border-2 md:border-3 border-primary/20 group-hover:border-primary transition-all">
             <AvatarImage src={member.avatar_url} alt={member.full_name} />
-            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-xs md:text-lg font-bold">
+            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-[10px] md:text-sm font-bold">
               {getInitials(member.full_name)}
             </AvatarFallback>
           </Avatar>
@@ -95,8 +95,8 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
             {member.full_name}
           </h4>
 
-          {/* Username */}
-          <p className="text-[8px] md:text-xs text-muted-foreground">@{member.username}</p>
+          {/* User ID */}
+          <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">ID: {member.user_id.slice(0, 8)}...</p>
 
           {/* Stage Progress */}
           <div className="space-y-0.5 md:space-y-1">
@@ -129,10 +129,10 @@ export const EmptySlot = ({ stageNumber, position }: { stageNumber: number; posi
     <div className="relative flex flex-col items-center animate-fade-in">
       <div className="absolute -top-4 md:-top-8 left-1/2 w-0.5 h-4 md:h-8 bg-border/50" style={{ transform: 'translateX(-50%)' }} />
       
-      <Card className="w-32 md:w-52 p-2 md:p-4 border border-dashed md:border-2 border-border/50 bg-muted/30">
-        <div className="flex justify-center mb-1 md:mb-3">
-          <div className="h-10 w-10 md:h-16 md:w-16 rounded-full border-2 md:border-4 border-dashed border-border/50 bg-muted flex items-center justify-center">
-            <Users className="h-5 w-5 md:h-8 md:w-8 text-muted-foreground/50" />
+      <Card className="w-24 md:w-40 p-1.5 md:p-3 border border-dashed md:border-2 border-border/50 bg-muted/30">
+        <div className="flex justify-center mb-1 md:mb-2">
+          <div className="h-8 w-8 md:h-12 md:w-12 rounded-full border-2 md:border-3 border-dashed border-border/50 bg-muted flex items-center justify-center">
+            <Users className="h-4 w-4 md:h-6 md:w-6 text-muted-foreground/50" />
           </div>
         </div>
 

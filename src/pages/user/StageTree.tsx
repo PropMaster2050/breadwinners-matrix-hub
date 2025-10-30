@@ -8,6 +8,8 @@ import { StageTreeView } from "@/components/network/StageTreeView";
 import { ArrowLeft, TrendingUp, Award, DollarSign, Users } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const StageTree = () => {
   const { stage } = useParams<{ stage: string }>();
@@ -19,8 +21,21 @@ const StageTree = () => {
   const stageNumber = parseInt(stage || "1");
   const { networkTree, stageData, loading } = useNetworkTree(stageNumber);
 
-  const handleMemberClick = (memberId: string) => {
-    navigate(`/network/member/${memberId}/stage/${stageNumber}`);
+  const handleMemberClick = async (memberId: string) => {
+    // Fetch member details
+    const { data: memberProfile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', memberId)
+      .single();
+
+    if (memberProfile) {
+      toast({
+        title: "Member Details",
+        description: `${memberProfile.full_name} (ID: ${memberProfile.user_id}) - Current Stage: ${memberProfile.current_stage}`,
+        duration: 5000,
+      });
+    }
   };
 
   const getStageInfo = (stageNum: number) => {

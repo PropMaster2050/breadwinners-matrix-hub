@@ -177,11 +177,17 @@ export const useNetworkTree = (stageNumber: number) => {
     let completedRecruits = 0;
 
     if (stage === 1) {
-      // Stage 1: count all direct recruits (up to 6)
+      // Stage 1: count all network members (direct + indirect)
       totalRecruits = tree.length;
+      // Count all direct recruits + their downlines
+      tree.forEach((member: any) => {
+        if (member.downlines && member.downlines.length > 0) {
+          totalRecruits += member.downlines.length;
+        }
+      });
       completedRecruits = totalRecruits;
     } else {
-      // Stages 2-6: total is always 6, but only count unlocked (completed previous stage)
+      // Stages 2-6: count direct recruits only
       totalRecruits = tree.length;
       completedRecruits = tree.filter(
         (m: any) => !m.is_locked && m.stage_completed >= (stage - 1)
