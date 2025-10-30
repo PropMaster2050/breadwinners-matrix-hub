@@ -18,18 +18,20 @@ const IncentiveWallet = () => {
     claimedRewards: []
   };
 
-  // Calculate actual matrix progression for incentives (all 2x2 = 6 members per stage)
+  // Calculate actual matrix progression for incentives
+  // Stage 1: 2x2 = 6 members
+  // Stages 2-6: 2x3 = 14 members each
   const stage1Complete = user.directRecruits >= 2 && user.totalRecruits >= 6;
-  const stage2Complete = stage1Complete && user.totalRecruits >= 12; // Stage 1 (6) + Stage 2 (6)
-  const stage3Complete = stage2Complete && user.totalRecruits >= 18; // Stage 1 (6) + Stage 2 (6) + Stage 3 (6)
-  const stage4Complete = stage3Complete && user.totalRecruits >= 24; // + Stage 4 (6)
-  const stage5Complete = stage4Complete && user.totalRecruits >= 30; // + Stage 5 (6)
-  const stage6Complete = stage5Complete && user.totalRecruits >= 36; // + Stage 6 (6)
+  const stage2Complete = stage1Complete && user.totalRecruits >= 20; // Stage 1 (6) + Stage 2 (14)
+  const stage3Complete = stage2Complete && user.totalRecruits >= 34; // + Stage 3 (14)
+  const stage4Complete = stage3Complete && user.totalRecruits >= 48; // + Stage 4 (14)
+  const stage5Complete = stage4Complete && user.totalRecruits >= 62; // + Stage 5 (14)
+  const stage6Complete = stage5Complete && user.totalRecruits >= 76; // + Stage 6 (14)
 
   const incentiveStructure = [
     {
       stage: 1,
-      requirement: "6 members (2 direct + 4 indirect)",
+      requirement: "6 members (2x2 matrix)",
       reward: "R600 Cash Reward",
       icon: Gift,
       status: stage1Complete ? "unlocked" : "locked",
@@ -38,48 +40,48 @@ const IncentiveWallet = () => {
     },
     {
       stage: 2,
-      requirement: "6 Stage 1 completers",
-      reward: "R1,200 + Samsung Smartphone",
+      requirement: "14 downlines complete Stage 1 (2x3 matrix)",
+      reward: "R2,100 + Samsung A04s",
       icon: Smartphone,
       status: stage2Complete ? "unlocked" : "locked",
-      current: stage1Complete ? Math.min(user.totalRecruits - 6, 6) : 0,
-      max: 6
+      current: stage1Complete ? Math.min(user.totalRecruits - 6, 14) : 0,
+      max: 14
     },
     {
       stage: 3,
-      requirement: "6 Stage 2 completers",
-      reward: "R1,500 + R10,000 Voucher",
+      requirement: "14 downlines complete Stage 2 (2x3 matrix)",
+      reward: "R2,520 + R10,000 Card Voucher",
       icon: Gift,
       status: stage3Complete ? "unlocked" : "locked",
-      current: stage2Complete ? Math.min(user.totalRecruits - 12, 6) : 0,
-      max: 6
+      current: stage2Complete ? Math.min(user.totalRecruits - 20, 14) : 0,
+      max: 14
     },
     {
       stage: 4,
-      requirement: "6 Stage 3 completers",
-      reward: "R6,000 + R25,000 Voucher",
+      requirement: "14 downlines complete Stage 3 (2x3 matrix)",
+      reward: "R14,000 + R25,000 Card Voucher",
       icon: Gift,
       status: stage4Complete ? "unlocked" : "locked",
-      current: stage3Complete ? Math.min(user.totalRecruits - 18, 6) : 0,
-      max: 6
+      current: stage3Complete ? Math.min(user.totalRecruits - 34, 14) : 0,
+      max: 14
     },
     {
       stage: 5,
-      requirement: "6 Stage 4 completers",
-      reward: "R9,000 + R50,000 Voucher",
+      requirement: "14 downlines complete Stage 4 (2x3 matrix)",
+      reward: "R21,000 + R50,000 Card Voucher",
       icon: Gift,
       status: stage5Complete ? "unlocked" : "locked",
-      current: stage4Complete ? Math.min(user.totalRecruits - 24, 6) : 0,
-      max: 6
+      current: stage4Complete ? Math.min(user.totalRecruits - 48, 14) : 0,
+      max: 14
     },
     {
       stage: 6,
-      requirement: "6 Stage 5 completers",
-      reward: "R12,000 + R150,000 Voucher",
+      requirement: "14 downlines complete Stage 5 (2x3 matrix)",
+      reward: "R28,000 + R150,000 Card Voucher",
       icon: Gift,
       status: stage6Complete ? "unlocked" : "locked",
-      current: stage5Complete ? Math.min(user.totalRecruits - 30, 6) : 0,
-      max: 6
+      current: stage5Complete ? Math.min(user.totalRecruits - 62, 14) : 0,
+      max: 14
     }
   ];
 

@@ -19,22 +19,28 @@ const IncomeReport = () => {
     const stage1Progress = Math.min(incomeData.directRecruits >= 2 ? 6 : incomeData.directRecruits, 6);
     const stage1Complete = stage1Progress >= 6;
     
-    // Stage 2: 14 downlines who each completed Stage 1 = 14 x 6 = 84 members
-    const stage2Progress = stage1Complete ? Math.min(incomeData.spillovers, 84) : 0;
-    const stage2Complete = stage2Progress >= 84;
+    // Stage 2-6: Each needs 14 completions (2x3 matrix)
+    const stage2Progress = stage1Complete ? Math.min(incomeData.spillovers, 14) : 0;
+    const stage2Complete = stage2Progress >= 14;
     
-    // Stage 3: 168 indirect downlines
-    const stage3Progress = stage2Complete ? Math.min(incomeData.spillovers - 84, 168) : 0;
-    const stage3Complete = stage3Progress >= 168;
+    const stage3Progress = stage2Complete ? Math.min(incomeData.spillovers - 14, 14) : 0;
+    const stage3Complete = stage3Progress >= 14;
     
-    // Stage 4: 336 indirect downlines
-    const stage4Progress = stage3Complete ? Math.min(incomeData.spillovers - 252, 336) : 0;
+    const stage4Progress = stage3Complete ? Math.min(incomeData.spillovers - 28, 14) : 0;
+    const stage4Complete = stage4Progress >= 14;
+    
+    const stage5Progress = stage4Complete ? Math.min(incomeData.spillovers - 42, 14) : 0;
+    const stage5Complete = stage5Progress >= 14;
+    
+    const stage6Progress = stage5Complete ? Math.min(incomeData.spillovers - 56, 14) : 0;
     
     return {
-      stage1: { members: stage1Progress, complete: stage1Complete, required: 6 },
-      stage2: { members: stage2Progress, complete: stage2Complete, required: 84 },
-      stage3: { members: stage3Progress, complete: stage3Complete, required: 168 },
-      stage4: { members: stage4Progress, complete: false, required: 336 }
+      stage1: { members: stage1Progress, complete: stage1Complete, required: 6, rate: 100 },
+      stage2: { members: stage2Progress, complete: stage2Complete, required: 14, rate: 150 },
+      stage3: { members: stage3Progress, complete: stage3Complete, required: 14, rate: 180 },
+      stage4: { members: stage4Progress, complete: stage4Complete, required: 14, rate: 1000 },
+      stage5: { members: stage5Progress, complete: stage5Complete, required: 14, rate: 1500 },
+      stage6: { members: stage6Progress, complete: false, required: 14, rate: 2000 }
     };
   };
 
@@ -43,39 +49,57 @@ const IncomeReport = () => {
   const stageData = [
     {
       stage: 1,
-      description: "2 Direct Members (each with 2)",
+      description: "6 Network Members (2x2 Matrix)",
       members: progress.stage1.members,
-      rate: 100,
-      earned: progress.stage1.members * 100,
+      rate: progress.stage1.rate,
+      earned: progress.stage1.members * progress.stage1.rate,
       status: progress.stage1.complete ? "Completed" : "In Progress...",
       required: progress.stage1.required
     },
     {
       stage: 2,
-      description: "14 Downlines × Stage 1 (6 each) = 84 members",
+      description: "14 Downlines Complete Stage 1 (2x3 Matrix)",
       members: progress.stage2.members,
-      rate: 100,
-      earned: progress.stage2.members * 100,
+      rate: progress.stage2.rate,
+      earned: progress.stage2.members * progress.stage2.rate,
       status: progress.stage1.complete ? (progress.stage2.complete ? "Completed" : "In Progress...") : "Locked",
       required: progress.stage2.required
     },
     {
       stage: 3,
-      description: "168 indirect downlines",
+      description: "14 Downlines Complete Stage 2 (2x3 Matrix)",
       members: progress.stage3.members,
-      rate: 100,
-      earned: progress.stage3.members * 100,
+      rate: progress.stage3.rate,
+      earned: progress.stage3.members * progress.stage3.rate,
       status: progress.stage2.complete ? (progress.stage3.complete ? "Completed" : "In Progress...") : "Locked",
       required: progress.stage3.required
     },
     {
       stage: 4,
-      description: "336 indirect downlines",
+      description: "14 Downlines Complete Stage 3 (2x3 Matrix)",
       members: progress.stage4.members,
-      rate: 100,
-      earned: progress.stage4.members * 100,
-      status: progress.stage3.complete ? (progress.stage4.members >= 336 ? "Completed" : "In Progress...") : "Locked",
+      rate: progress.stage4.rate,
+      earned: progress.stage4.members * progress.stage4.rate,
+      status: progress.stage3.complete ? (progress.stage4.complete ? "Completed" : "In Progress...") : "Locked",
       required: progress.stage4.required
+    },
+    {
+      stage: 5,
+      description: "14 Downlines Complete Stage 4 (2x3 Matrix)",
+      members: progress.stage5.members,
+      rate: progress.stage5.rate,
+      earned: progress.stage5.members * progress.stage5.rate,
+      status: progress.stage4.complete ? (progress.stage5.complete ? "Completed" : "In Progress...") : "Locked",
+      required: progress.stage5.required
+    },
+    {
+      stage: 6,
+      description: "14 Downlines Complete Stage 5 (2x3 Matrix)",
+      members: progress.stage6.members,
+      rate: progress.stage6.rate,
+      earned: progress.stage6.members * progress.stage6.rate,
+      status: progress.stage5.complete ? (progress.stage6.complete ? "Completed" : "In Progress...") : "Locked",
+      required: progress.stage6.required
     }
   ];
 

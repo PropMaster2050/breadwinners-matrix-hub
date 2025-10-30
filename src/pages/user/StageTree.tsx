@@ -41,11 +41,11 @@ const StageTree = () => {
   const getStageInfo = (stageNum: number) => {
     const requirements = {
       1: "Recruit 6 members in 2×2 matrix structure",
-      2: "6 recruits complete Stage 1",
-      3: "6 recruits complete Stage 2",
-      4: "6 recruits complete Stage 3",
-      5: "6 recruits complete Stage 4",
-      6: "6 recruits complete Stage 5"
+      2: "14 downlines complete Stage 1 (2×3 matrix)",
+      3: "14 downlines complete Stage 2 (2×3 matrix)",
+      4: "14 downlines complete Stage 3 (2×3 matrix)",
+      5: "14 downlines complete Stage 4 (2×3 matrix)",
+      6: "14 downlines complete Stage 5 (2×3 matrix)"
     };
     return requirements[stageNum as keyof typeof requirements] || "";
   };
@@ -122,10 +122,10 @@ const StageTree = () => {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-accent">
-              {stageData?.completed_recruits || 0} / 6
+              {stageData?.completed_recruits || 0} / {stageNumber === 1 ? 6 : 14}
             </div>
             <Progress 
-              value={((stageData?.completed_recruits || 0) / 6) * 100} 
+              value={((stageData?.completed_recruits || 0) / (stageNumber === 1 ? 6 : 14)) * 100} 
               className="mt-2 h-2"
             />
           </CardContent>
@@ -180,7 +180,7 @@ const StageTree = () => {
             Stage {stageNumber} Network Tree
           </CardTitle>
           <p className="text-sm text-muted-foreground mt-1">
-            2×2 Matrix Structure - Each member can have 2 direct recruits
+            {stageNumber === 1 ? "2×2 Matrix (6 members)" : "2×3 Matrix (14 members)"} - Track your network growth
           </p>
         </CardHeader>
         <CardContent className="p-6">
@@ -224,7 +224,11 @@ const StageTree = () => {
             <div className="bg-accent/5 rounded-lg p-4">
               <h4 className="font-semibold mb-2">Matrix Structure</h4>
               <p className="text-sm text-muted-foreground">
-                2×2 Matrix: <span className="font-bold text-accent">6 total positions</span> (2 direct + 4 indirect)
+                {stageNumber === 1 ? "2×2 Matrix: " : "2×3 Matrix: "}
+                <span className="font-bold text-accent">
+                  {stageNumber === 1 ? "6 total positions" : "14 total positions"}
+                </span> 
+                {stageNumber === 1 ? " (2 direct + 4 indirect)" : " (2 direct with extended downlines)"}
               </p>
             </div>
           </div>
@@ -235,7 +239,7 @@ const StageTree = () => {
               <h4 className="font-bold text-lg mb-2">Stage Completion Bonus</h4>
               <p className="text-2xl font-bold text-warning mb-2">{stageData.incentive}</p>
               <p className="text-sm text-muted-foreground">
-                Awarded when all 6 recruits complete Stage {stageNumber - 1}
+                Awarded when {stageNumber === 1 ? "6" : "14"} recruits complete Stage {stageNumber - 1}
               </p>
             </div>
           )}

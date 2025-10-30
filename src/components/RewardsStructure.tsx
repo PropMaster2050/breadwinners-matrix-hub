@@ -17,21 +17,21 @@ const rewardsData = [
     stage: 2,
     title: "Stage 2 - Gold", 
     requirement: "14 Members Complete Stage 1",
-    reward: "R2,800",
-    calculation: "R200 x 14",
+    reward: "R2,100",
+    calculation: "R150 x 14",
     color: "from-yellow-400 to-yellow-600",
     icon: <Smartphone className="h-5 w-5" />,
-    bonus: "Samsung Smartphone"
+    bonus: "Samsung A04s Smartphone"
   },
   {
     stage: 3,
     title: "Stage 3 - Platinum",
     requirement: "14 Members Complete Stage 2", 
-    reward: "R3,500",
-    calculation: "R250 x 14",
+    reward: "R2,520",
+    calculation: "R180 x 14",
     color: "from-gray-300 to-gray-500",
     icon: <Gift className="h-5 w-5" />,
-    bonus: "R20,000 Family Card Voucher or Cash"
+    bonus: "R10,000 Card Voucher or Cash"
   },
   {
     stage: 4,
@@ -41,27 +41,27 @@ const rewardsData = [
     calculation: "R1,000 x 14",
     color: "from-gray-600 to-gray-800",
     icon: <Banknote className="h-5 w-5" />,
-    bonus: "R100,000 Family Card Voucher or Cash"
+    bonus: "R25,000 Card Voucher or Cash"
   },
   {
     stage: 5,
     title: "Stage 5 - Diamond",
-    requirement: "6 Members Complete Stage 4",
-    reward: "R84,000", 
-    calculation: "R14,000 x 6",
+    requirement: "14 Members Complete Stage 4",
+    reward: "R21,000", 
+    calculation: "R1,500 x 14",
     color: "from-cyan-400 to-blue-600",
     icon: <Gift className="h-5 w-5" />,
-    bonus: "R500,000 Family Card Voucher or Cash"
+    bonus: "R50,000 Card Voucher or Cash"
   },
   {
     stage: 6,
     title: "Stage 6 - Elite",
-    requirement: "6 Members Complete Stage 5",
-    reward: "R504,000", 
-    calculation: "R84,000 x 6",
+    requirement: "14 Members Complete Stage 5",
+    reward: "R28,000", 
+    calculation: "R2,000 x 14",
     color: "from-purple-500 to-pink-600",
     icon: <Banknote className="h-5 w-5" />,
-    bonus: "R2,000,000 Family Card Voucher or Cash"
+    bonus: "R150,000 Card Voucher or Cash"
   }
 ];
 

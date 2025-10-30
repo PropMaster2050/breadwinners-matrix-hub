@@ -155,47 +155,68 @@ export const useNetworkTree = (stageNumber: number) => {
   const calculateStageData = async (tree: any[], stage: number) => {
     const commissionAmounts = {
       1: 100,
-      2: 200,
-      3: 250,
+      2: 150,
+      3: 180,
       4: 1000,
       5: 1500,
       6: 2000
     };
 
     const incentives = {
-      2: "Samsung Smartphone",
-      3: "R10,000 Voucher",
-      4: "R25,000 Voucher",
-      5: "R50,000 Voucher",
-      6: "R150,000 Voucher"
+      2: "Samsung A04s Smartphone",
+      3: "R10,000 Card Voucher or Cash",
+      4: "R25,000 Card Voucher or Cash",
+      5: "R50,000 Card Voucher or Cash",
+      6: "R150,000 Card Voucher or Cash"
+    };
+
+    const requiredCompletions = {
+      1: 6,
+      2: 14,
+      3: 14,
+      4: 14,
+      5: 14,
+      6: 14
     };
 
     const perRecruitAmount = commissionAmounts[stage as keyof typeof commissionAmounts];
+    const requiredCount = requiredCompletions[stage as keyof typeof requiredCompletions];
     
     // Count total and completed recruits
     let totalRecruits = 0;
     let completedRecruits = 0;
 
     if (stage === 1) {
-      // Stage 1: count all network members (direct + indirect)
+      // Stage 1: count all network members (direct + indirect) up to 6
       totalRecruits = tree.length;
-      // Count all direct recruits + their downlines
       tree.forEach((member: any) => {
         if (member.downlines && member.downlines.length > 0) {
           totalRecruits += member.downlines.length;
         }
       });
+      // Cap at 6 for Stage 1
+      totalRecruits = Math.min(totalRecruits, 6);
       completedRecruits = totalRecruits;
     } else {
-      // Stages 2-6: count direct recruits only
-      totalRecruits = tree.length;
-      completedRecruits = tree.filter(
+      // Stages 2-6: need 14 completions from downline network
+      // Count all downline members who completed the previous stage
+      const allDownlines: any[] = [];
+      tree.forEach((member: any) => {
+        allDownlines.push(member);
+        if (member.downlines && member.downlines.length > 0) {
+          allDownlines.push(...member.downlines);
+        }
+      });
+      
+      totalRecruits = Math.min(allDownlines.length, requiredCount);
+      completedRecruits = allDownlines.filter(
         (m: any) => !m.is_locked && m.stage_completed >= (stage - 1)
       ).length;
+      completedRecruits = Math.min(completedRecruits, requiredCount);
     }
 
     const totalEarned = completedRecruits * perRecruitAmount;
-    const isComplete = completedRecruits >= 6;
+    const isComplete = completedRecruits >= requiredCount;
 
     setStageData({
       stage_number: stage,

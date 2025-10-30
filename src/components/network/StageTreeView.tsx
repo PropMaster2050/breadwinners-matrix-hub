@@ -25,9 +25,10 @@ export const StageTreeView = ({
       .slice(0, 2);
   };
 
-  // 2x2 matrix: always show first 2 direct recruits (positions 1-2)
-  // They have their own downlines (positions 3-6)
+  // Stage 1: 2x2 matrix (6 total: 2 direct + 4 indirect)
+  // Stages 2-6: 2x3 matrix (14 total: 2 direct, each with 4 downlines = 8, plus 4 more under last 4)
   const directRecruits = networkTree.slice(0, 2);
+  const showExtendedMatrix = stageNumber >= 2; // 2x3 for stages 2-6
 
   return (
     <div className="flex flex-col items-center space-y-6 md:space-y-12 py-4 md:py-8">
@@ -52,7 +53,7 @@ export const StageTreeView = ({
             <h3 className="font-bold text-sm md:text-lg text-primary-foreground">{currentUser?.full_name}</h3>
             <p className="text-xs md:text-sm text-primary-foreground/80">@{currentUser?.username}</p>
             <div className="bg-warning/20 rounded px-2 py-1 text-[10px] md:text-xs font-semibold text-warning">
-              Stage {stageNumber} View
+              Stage {stageNumber} View - {showExtendedMatrix ? "2x3 Matrix (14)" : "2x2 Matrix (6)"}
             </div>
           </div>
         </div>
@@ -61,7 +62,7 @@ export const StageTreeView = ({
       {/* Vertical connecting line */}
       <div className="w-0.5 h-6 md:h-12 bg-gradient-to-b from-primary to-primary/50 -my-3 md:-my-6" />
 
-      {/* 2x2 Matrix Structure - Same for all stages */}
+      {/* Matrix Structure */}
       <div className="relative grid grid-cols-2 gap-6 md:gap-12">
         {directRecruits.map((member, idx) => (
           <div key={member.id} className="flex flex-col items-center space-y-4">
@@ -74,10 +75,10 @@ export const StageTreeView = ({
               isLocked={member.is_locked}
             />
 
-            {/* Grandchildren (Level 2) - Positions 3-6 */}
+            {/* Level 2 - Grandchildren */}
             <div className="w-0.5 h-4 bg-gradient-to-b from-primary to-primary/50" />
             <div className="grid grid-cols-2 gap-2">
-              {member.downlines?.slice(0, 2).map((downline) => (
+              {member.downlines?.slice(0, showExtendedMatrix ? 4 : 2).map((downline, dlIdx) => (
                 <div key={downline.id} className="w-12 md:w-16">
                   <TreeNode 
                     member={downline} 
@@ -86,15 +87,32 @@ export const StageTreeView = ({
                     onMemberClick={onMemberClick}
                     isLocked={member.is_locked || downline.is_locked}
                   />
+                  
+                  {/* Level 3 - Great-grandchildren (only for 2x3 matrix on last 4 positions) */}
+                  {showExtendedMatrix && dlIdx >= 2 && (
+                    <>
+                      <div className="w-0.5 h-2 bg-gradient-to-b from-primary/50 to-primary/30 mx-auto" />
+                      <div className="grid grid-cols-2 gap-1 mt-2">
+                        <div className="w-8 md:w-10">
+                          <EmptySlot stageNumber={stageNumber} position={0} />
+                        </div>
+                        <div className="w-8 md:w-10">
+                          <EmptySlot stageNumber={stageNumber} position={0} />
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
 
               {/* Empty grandchild slots */}
-              {Array.from({ length: Math.max(0, 2 - (member.downlines?.slice(0, 2).length || 0)) }).map((_, emptyIdx) => (
-                <div key={`empty-gc-${idx}-${emptyIdx}`} className="flex flex-col items-center">
+              {Array.from({ 
+                length: Math.max(0, (showExtendedMatrix ? 4 : 2) - (member.downlines?.length || 0)) 
+              }).map((_, emptyIdx) => (
+                <div key={`empty-gc-${idx}-${emptyIdx}`} className="w-12 md:w-16">
                   <EmptySlot 
                     stageNumber={stageNumber}
-                    position={idx === 0 ? 3 + emptyIdx : 5 + emptyIdx}
+                    position={0}
                   />
                 </div>
               ))}
@@ -102,23 +120,22 @@ export const StageTreeView = ({
           </div>
         ))}
 
-        {/* Empty direct recruit slots (positions 1-2) */}
+        {/* Empty direct recruit slots */}
         {directRecruits.length < 2 && (
           <>
-            {Array.from({ length: 2 - directRecruits.length }).map((_, i) => {
-              const pos = directRecruits.length + i + 1; // 1 or 2
-              const gcStart = pos === 1 ? 3 : 5;
-              return (
-                <div key={`empty-direct-${i}`} className="flex flex-col items-center space-y-4">
-                  <EmptySlot stageNumber={stageNumber} position={pos} />
-                  <div className="w-0.5 h-4 bg-gradient-to-b from-primary to-primary/50" />
-                  <div className="grid grid-cols-2 gap-2">
-                    <EmptySlot stageNumber={stageNumber} position={gcStart} />
-                    <EmptySlot stageNumber={stageNumber} position={gcStart + 1} />
-                  </div>
+            {Array.from({ length: 2 - directRecruits.length }).map((_, i) => (
+              <div key={`empty-direct-${i}`} className="flex flex-col items-center space-y-4">
+                <EmptySlot stageNumber={stageNumber} position={0} />
+                <div className="w-0.5 h-4 bg-gradient-to-b from-primary to-primary/50" />
+                <div className="grid grid-cols-2 gap-2">
+                  {Array.from({ length: showExtendedMatrix ? 4 : 2 }).map((_, j) => (
+                    <div key={j} className="w-12 md:w-16">
+                      <EmptySlot stageNumber={stageNumber} position={0} />
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </>
         )}
       </div>
