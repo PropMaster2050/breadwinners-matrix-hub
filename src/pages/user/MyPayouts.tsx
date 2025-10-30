@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
-import { DollarSign, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Banknote, Clock, CheckCircle, XCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface Withdrawal {
@@ -112,7 +112,7 @@ const MyPayouts = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Withdrawn</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <Banknote className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -171,7 +171,7 @@ const MyPayouts = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <DollarSign className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <Banknote className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No withdrawal history</h3>
               <p className="text-muted-foreground">
                 Your withdrawal requests will appear here

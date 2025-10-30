@@ -16,7 +16,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Header />
           <main className="flex-1 p-4 sm:p-6">
             <PageTransition>
-              <div className="max-w-7xl mx-auto w-full px-2 sm:px-0">
+              <div className="max-w-7xl mx-auto w-full">
                 {children}
               </div>
             </PageTransition>

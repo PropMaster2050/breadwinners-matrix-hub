@@ -96,7 +96,9 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
           </h4>
 
           {/* User ID */}
-          <p className="text-[8px] md:text-[10px] text-muted-foreground truncate">ID: {member.user_id.slice(0, 8)}...</p>
+          <p className="text-[8px] md:text-[10px] text-muted-foreground truncate font-mono">
+            BW{member.user_id.slice(0, 6).toUpperCase()}
+          </p>
 
           {/* Stage Progress */}
           <div className="space-y-0.5 md:space-y-1">
