@@ -103,45 +103,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const hydrateUserFromSupabase = async (userId: string): Promise<User | null> => {
     try {
-      const [
-        { data: roleData },
-        { data: profileData },
-        { data: walletData },
-        { data: networkData }
-      ] = await Promise.all([
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Hydration timeout')), 10000)
+      );
+
+      const dataPromise = Promise.all([
         supabase.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').maybeSingle(),
         supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('wallets').select('*').eq('user_id', userId).maybeSingle(),
         supabase.from('network_tree').select('*').eq('user_id', userId).maybeSingle(),
       ]);
 
+      const [
+        { data: roleData },
+        { data: profileData },
+        { data: walletData },
+        { data: networkData }
+      ] = await Promise.race([dataPromise, timeoutPromise]) as any;
+
       const admin = !!roleData;
 
-      if (!profileData) return null;
+      if (!profileData) {
+        console.error('No profile data found for user:', userId);
+        return null;
+      }
 
+      // Provide safe defaults for all fields to support older accounts
       const baseUser: User = {
         id: userId,
-        memberId: profileData.own_referral_code,
-        fullName: profileData.full_name,
-        username: profileData.username,
-        email: profileData.email,
+        memberId: profileData.own_referral_code || `BW${userId.slice(0, 6)}`,
+        fullName: profileData.full_name || 'User',
+        username: profileData.username || 'unknown',
+        email: profileData.email || '',
         mobile: profileData.phone || '',
         sponsorId: profileData.referrer_code || undefined,
         level: networkData?.level || 1,
-        stage: networkData?.stage || 1,
+        stage: profileData.current_stage || networkData?.stage || 1,
         earnings: walletData?.total_earned || 0,
         directRecruits: profileData.direct_recruits || 0,
         totalRecruits: profileData.total_recruits || 0,
         isActive: true,
-        joinDate: profileData.created_at,
+        joinDate: profileData.created_at || new Date().toISOString(),
         wallets: {
           eWallet: walletData?.e_wallet_balance || 0,
-          registrationWallet: walletData?.registration_wallet_balance || 250,
+          registrationWallet: walletData?.registration_wallet_balance || 0,
           incentiveWallet: walletData?.incentive_wallet_balance || 0
         },
         uplineId: networkData?.parent_id || undefined,
-        // Add referral code for sharing
-        ownReferralCode: profileData.own_referral_code
+        ownReferralCode: profileData.own_referral_code || `BW${userId.slice(0, 6)}`
       };
 
       setUser(baseUser);
@@ -150,6 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return baseUser;
     } catch (e) {
       console.error('Failed to hydrate user:', e);
+      // Return null but don't crash - allow user to try again
       return null;
     }
   };
@@ -243,36 +254,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (!error && data.user) {
-        // Check if user has admin role
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
-
-        const isUserAdmin = !!roleData;
-
-        // Hydrate user profile and roles safely
-        const hydrated = await hydrateUserFromSupabase(data.user.id);
-        if (hydrated) {
-          toast({ title: isUserAdmin ? "Welcome back, Administrator!" : `Welcome back, ${hydrated.fullName}!` });
-          navigate(isUserAdmin ? '/admin' : '/dashboard');
-          return true;
+        // Check if user has admin role (with timeout protection)
+        let isUserAdmin = false;
+        try {
+          const { data: roleData } = await Promise.race([
+            supabase.from('user_roles').select('role').eq('user_id', data.user.id).eq('role', 'admin').maybeSingle(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Role check timeout')), 5000))
+          ]) as any;
+          isUserAdmin = !!roleData;
+        } catch (roleError) {
+          console.error('Role check error:', roleError);
+          // Continue with non-admin login if role check fails
         }
 
-        // If hydration failed, sign out and show error to avoid ghost login
+        // Hydrate user profile with timeout protection
+        try {
+          const hydrated = await hydrateUserFromSupabase(data.user.id);
+          if (hydrated) {
+            toast({ title: isUserAdmin ? "Welcome back, Administrator!" : `Welcome back, ${hydrated.fullName}!` });
+            navigate(isUserAdmin ? '/admin' : '/dashboard');
+            return true;
+          }
+        } catch (hydrateError) {
+          console.error('Hydration error:', hydrateError);
+        }
+
+        // If hydration failed, sign out and show helpful error
         await supabase.auth.signOut();
         toast({
           title: "Login failed",
-          description: "Could not load your profile. Please try again.",
+          description: "Could not load your profile. Your account may need to be set up. Please contact support.",
           variant: "destructive"
         });
         return false;
-
       }
-
-      // Removed insecure hardcoded admin fallback. Please use Supabase email/password login.
 
       toast({
         title: "Login failed",
@@ -284,7 +299,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Login error:', error);
       toast({
         title: "Login failed",
-        description: "An error occurred during login",
+        description: "An error occurred during login. Please try again.",
         variant: "destructive"
       });
       return false;
