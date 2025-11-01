@@ -1,8 +1,6 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Users, CheckCircle2 } from "lucide-react";
+import { Users, CheckCircle2, UserCircle2 } from "lucide-react";
 import { NetworkMember } from "@/hooks/useNetworkTree";
 
 interface TreeNodeProps {
@@ -14,15 +12,6 @@ interface TreeNodeProps {
 }
 
 export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }: TreeNodeProps) => {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   const stageProgress = (member.current_stage / 6) * 100;
   const isCompleted = member.stage_completed && member.stage_completed >= stageNumber;
   const locked = isLocked || member.is_locked;
@@ -37,24 +26,15 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
         />
       )}
       
-      {/* Member Card */}
-      <Card
-        className={`relative w-24 md:w-40 p-1.5 md:p-3 transition-all duration-300 group border bg-gradient-to-br from-card to-card/80 ${
+      {/* Member Node */}
+      <div
+        className={`relative transition-all duration-300 ${
           locked 
-            ? 'cursor-not-allowed grayscale border-muted' 
-            : 'cursor-pointer hover:shadow-xl hover:scale-105 hover:border-primary'
+            ? 'cursor-not-allowed' 
+            : 'cursor-pointer hover:scale-110'
         }`}
         onClick={() => !locked && onMemberClick?.(member.user_id)}
       >
-        {/* Locked Badge */}
-        {locked && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-            <Badge className="bg-muted text-muted-foreground text-[8px] md:text-xs font-bold">
-              🔒 Locked
-            </Badge>
-          </div>
-        )}
-
         {/* Completion Badge */}
         {!locked && isCompleted && (
           <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 z-10">
@@ -73,23 +53,36 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
           </div>
         )}
 
-        {/* Avatar */}
-        <div className="flex justify-center mb-1 md:mb-2">
-          <Avatar className="h-8 w-8 md:h-12 md:w-12 border-2 md:border-3 border-primary/20 group-hover:border-primary transition-all">
-            <AvatarImage src={member.avatar_url} alt={member.full_name} />
-            <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-primary-foreground text-[10px] md:text-sm font-bold">
-              {getInitials(member.full_name)}
-            </AvatarFallback>
-          </Avatar>
+        {/* Avatar Head */}
+        <div className="relative">
+          <UserCircle2 
+            className={`w-16 h-16 md:w-24 md:h-24 transition-all duration-300 ${
+              locked 
+                ? 'text-muted-foreground/30' 
+                : 'text-primary hover:text-accent'
+            }`}
+            strokeWidth={1.5}
+          />
+          
+          {/* Stage Badge on Avatar */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+            <Badge variant={locked ? "secondary" : "default"} className="text-[8px] md:text-xs font-semibold px-1 md:px-2 py-0">
+              Stage {member.current_stage}
+            </Badge>
+          </div>
+
+          {/* Locked Overlay */}
+          {locked && (
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+              <Badge className="bg-muted text-muted-foreground text-[8px] md:text-xs font-bold">
+                🔒
+              </Badge>
+            </div>
+          )}
         </div>
 
-        {/* Member Info */}
-        <div className="text-center space-y-0.5 md:space-y-2">
-          {/* Stage Badge */}
-          <Badge variant="outline" className="text-[8px] md:text-xs font-semibold px-1 md:px-2.5 py-0 md:py-0.5">
-            Stage {member.current_stage}
-          </Badge>
-
+        {/* Member Info Below Avatar */}
+        <div className="text-center mt-3 md:mt-4 space-y-0.5 md:space-y-1 max-w-[100px] md:max-w-[140px]">
           {/* Name */}
           <h4 className="font-bold text-[10px] md:text-sm text-foreground truncate">
             {member.full_name}
@@ -101,26 +94,16 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
           </p>
 
           {/* Stage Progress */}
-          <div className="space-y-0.5 md:space-y-1">
-            <Progress value={stageProgress} className="h-1 md:h-1.5" />
-            <p className="text-[8px] md:text-[10px] text-muted-foreground">
-              Stage Progress: {member.current_stage}/6
-            </p>
-          </div>
-
-          {/* Joined Date */}
-          <p className="text-[8px] md:text-[10px] text-muted-foreground">
-            Joined: {new Date(member.joined_at).toLocaleDateString()}
-          </p>
+          {!locked && (
+            <div className="space-y-0.5 mt-1 md:mt-2">
+              <Progress value={stageProgress} className="h-1 md:h-1.5" />
+              <p className="text-[8px] md:text-[10px] text-muted-foreground">
+                Progress: {member.current_stage}/6
+              </p>
+            </div>
+          )}
         </div>
-
-        {/* Hover Overlay */}
-        {!locked && (
-          <div className="absolute inset-0 bg-primary/5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <span className="text-[8px] md:text-xs font-medium text-primary">View Details</span>
-          </div>
-        )}
-      </Card>
+      </div>
     </div>
   );
 };
@@ -131,24 +114,26 @@ export const EmptySlot = ({ stageNumber, position }: { stageNumber: number; posi
     <div className="relative flex flex-col items-center animate-fade-in">
       <div className="absolute -top-4 md:-top-8 left-1/2 w-0.5 h-4 md:h-8 bg-border/50" style={{ transform: 'translateX(-50%)' }} />
       
-      <Card className="w-24 md:w-40 p-1.5 md:p-3 border border-dashed md:border-2 border-border/50 bg-muted/30">
-        <div className="flex justify-center mb-1 md:mb-2">
-          <div className="h-8 w-8 md:h-12 md:w-12 rounded-full border-2 md:border-3 border-dashed border-border/50 bg-muted flex items-center justify-center">
-            <Users className="h-4 w-4 md:h-6 md:w-6 text-muted-foreground/50" />
-          </div>
-        </div>
-
-        <div className="text-center space-y-0.5 md:space-y-2">
-          <Badge variant="secondary" className="text-[8px] md:text-xs px-1 md:px-2.5 py-0 md:py-0.5">
+      <div className="relative">
+        <UserCircle2 
+          className="w-16 h-16 md:w-24 md:h-24 text-muted-foreground/30"
+          strokeWidth={1.5}
+        />
+        
+        {/* Stage Badge */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+          <Badge variant="secondary" className="text-[8px] md:text-xs px-1 md:px-2 py-0">
             Stage {stageNumber}
           </Badge>
-          <p className="text-[8px] md:text-xs text-muted-foreground font-medium">Empty Slot</p>
-          <p className="text-[8px] md:text-[10px] text-muted-foreground">Position {position}</p>
-          <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 md:mt-2">
-            Share referral link to recruit
-          </p>
         </div>
-      </Card>
+      </div>
+
+      <div className="text-center mt-3 md:mt-4 space-y-0.5 max-w-[100px] md:max-w-[140px]">
+        <p className="text-[8px] md:text-xs text-muted-foreground font-medium">Empty Slot</p>
+        <p className="text-[8px] md:text-[10px] text-muted-foreground">
+          Share referral link
+        </p>
+      </div>
     </div>
   );
 };

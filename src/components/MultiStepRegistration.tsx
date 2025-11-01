@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAuth } from "@/hooks/useAuth";
 import { Eye, EyeOff, CreditCard, User, MapPin, Shield, ArrowLeft, ArrowRight } from "lucide-react";
 import breadwinnersLogo from "@/assets/breadwinners-logo.png";
-import voucherLogo from "@/assets/1voucher-logo.png";
+
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 
@@ -171,17 +171,8 @@ const MultiStepRegistration = () => {
 
         <Card className="border-border/50 shadow-lg">
           <CardHeader className="text-center">
-            {step === 2 && (
-              <div className="flex justify-center mb-4">
-                <img 
-                  src={voucherLogo} 
-                  alt="1voucher" 
-                  className="h-20 w-auto rounded-lg"
-                />
-              </div>
-            )}
             <CardTitle className="text-2xl font-bold">
-              {step === 1 ? "Personal Details" : "Voucher Purchase"}
+              {step === 1 ? "Personal Details" : "E-Pin Entry"}
             </CardTitle>
             <CardDescription className="flex items-center justify-center gap-2">
               {step === 1 ? (
@@ -192,7 +183,7 @@ const MultiStepRegistration = () => {
               ) : (
                 <>
                   <CreditCard className="h-4 w-4" />
-                  Enter your R250 voucher code
+                  Enter your E-Pin from Admin
                 </>
               )}
             </CardDescription>
@@ -440,7 +431,7 @@ const MultiStepRegistration = () => {
                     className="w-full h-12 bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 font-semibold"
                     disabled={!validateStep1() || !validatePasswords()}
                   >
-                    Continue to Voucher
+                    Continue To Payment
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </div>
@@ -456,15 +447,15 @@ const MultiStepRegistration = () => {
                     <ol className="space-y-2 text-sm text-muted-foreground">
                       <li className="flex gap-2">
                         <span className="font-semibold text-primary">1.</span>
-                        <span>Buy a R250 1voucher at any retail store (Pep, Shoprite, Boxer, Game, Makro, Pick n Pay)</span>
+                        <span>Make a R250 bank payment to the provided admin account</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-semibold text-primary">2.</span>
-                        <span>Send the 1voucher code to Admin via WhatsApp</span>
+                        <span>Send payment proof to Admin via WhatsApp</span>
                       </li>
                       <li className="flex gap-2">
                         <span className="font-semibold text-primary">3.</span>
-                        <span>Admin will send you an E-Pin to complete your registration</span>
+                        <span>Admin will verify and send you an E-Pin to complete your registration</span>
                       </li>
                     </ol>
                   </div>
@@ -485,7 +476,7 @@ const MultiStepRegistration = () => {
                       className="h-11 font-mono text-center text-lg"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Insert the E-Pin you received from Admin after sending your R250 1voucher code
+                      Insert the E-Pin you received from Admin after making your R250 bank payment
                     </p>
                   </div>
 

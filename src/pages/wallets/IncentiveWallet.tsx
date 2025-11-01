@@ -89,10 +89,10 @@ const IncentiveWallet = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Incentive Wallet</h1>
-        <p className="text-muted-foreground">Extra bonuses - Cash rewards, Samsung smartphones, and premium vouchers</p>
+        <p className="text-muted-foreground">Extra bonuses - Cash rewards, Samsung smartphones, and premium card vouchers</p>
         <div className="mt-4 p-4 bg-accent/10 border border-accent/20 rounded-lg">
           <p className="text-sm text-muted-foreground">
-            <strong>How to purchase e-pins:</strong> Buy a R250 voucher at any retail store (Pep, Shoprite, Boxer, Game, Makro, Pick n Pay) and send the voucher code to Admin via WhatsApp. You'll receive an e-pin to register new accounts.
+            <strong>How to purchase e-pins:</strong> Make a R250 bank payment to the admin account and send payment proof via WhatsApp. After verification, you'll receive an e-pin to register new accounts.
           </p>
         </div>
       </div>

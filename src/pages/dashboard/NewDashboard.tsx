@@ -284,7 +284,7 @@ const NewDashboard = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Registration Wallet</h4>
-                    <p className="text-sm text-muted-foreground">Track voucher purchases</p>
+                    <p className="text-sm text-muted-foreground">Track e-pin balance</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -305,7 +305,7 @@ const NewDashboard = () => {
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Incentive Wallet</h4>
-                    <p className="text-sm text-muted-foreground">Samsung, Laptop, R5,000 vouchers</p>
+                    <p className="text-sm text-muted-foreground">Samsung, Laptop, Cash rewards</p>
                   </div>
                 </div>
                 <div className="text-right">

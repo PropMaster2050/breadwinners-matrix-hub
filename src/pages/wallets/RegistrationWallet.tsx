@@ -18,7 +18,7 @@ const RegistrationWallet = () => {
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Registration Wallet</h1>
-        <p className="text-muted-foreground">Track new e-pin purchases and manage vouchers</p>
+        <p className="text-muted-foreground">Track your e-pin balance and purchases</p>
       </div>
 
       {/* Wallet Summary */}
@@ -69,7 +69,7 @@ const RegistrationWallet = () => {
           <CardHeader>
             <CardTitle>Purchase E-pins</CardTitle>
             <CardDescription>
-              Buy new registration vouchers to distribute to new members
+              Buy new e-pins to distribute to new members
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
