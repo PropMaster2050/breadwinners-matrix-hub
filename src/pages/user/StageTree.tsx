@@ -5,36 +5,46 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useNetworkTree } from "@/hooks/useNetworkTree";
 import { StageTreeView } from "@/components/network/StageTreeView";
-import { ArrowLeft, TrendingUp, Award, DollarSign, Users } from "lucide-react";
+import { ArrowLeft, TrendingUp, Award, DollarSign, Users, ChevronRight, Home } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { PageTransition } from "@/components/PageTransition";
+
+interface BreadcrumbItem {
+  userId: string;
+  name: string;
+}
 
 const StageTree = () => {
   const { stage } = useParams<{ stage: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  
+  // Navigation stack for drilling down into user trees
+  const [navigationStack, setNavigationStack] = useState<BreadcrumbItem[]>([]);
+  const currentViewingUserId = navigationStack.length > 0 
+    ? navigationStack[navigationStack.length - 1].userId 
+    : user?.id;
 
   if (!user) return null;
 
   const stageNumber = parseInt(stage || "1");
-  const { networkTree, stageData, loading } = useNetworkTree(stageNumber);
+  const { networkTree, stageData, loading, viewedUserProfile } = useNetworkTree(stageNumber, currentViewingUserId);
 
-  const handleMemberClick = async (memberId: string) => {
-    // Fetch member details
-    const { data: memberProfile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('user_id', memberId)
-      .single();
+  const handleMemberClick = (memberId: string, memberName: string) => {
+    // Add to navigation stack to drill down
+    setNavigationStack([...navigationStack, { userId: memberId, name: memberName }]);
+  };
 
-    if (memberProfile) {
-      toast({
-        title: "Member Details",
-        description: `${memberProfile.full_name} (ID: ${memberProfile.user_id}) - Current Stage: ${memberProfile.current_stage}`,
-        duration: 5000,
-      });
+  const handleBreadcrumbClick = (index: number) => {
+    // Navigate back to a specific level
+    if (index === -1) {
+      // Back to root (current user)
+      setNavigationStack([]);
+    } else {
+      // Navigate to specific breadcrumb
+      setNavigationStack(navigationStack.slice(0, index + 1));
     }
   };
 
@@ -69,8 +79,12 @@ const StageTree = () => {
 
   const isStageComplete = stageData?.is_complete || false;
 
+  const displayName = viewedUserProfile?.full_name || user?.fullName || "Your";
+  const isViewingOwnTree = currentViewingUserId === user?.id;
+
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <PageTransition key={currentViewingUserId}>
+      <div className="max-w-7xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Button variant="ghost" size="icon" onClick={() => navigate("/network")}>
@@ -78,9 +92,37 @@ const StageTree = () => {
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Stage {stageNumber} Network Market
+            {isViewingOwnTree ? "Your" : displayName + "'s"} Stage {stageNumber} Network
           </h1>
           <p className="text-muted-foreground">{getStageInfo(stageNumber)}</p>
+          
+          {/* Breadcrumb Navigation */}
+          {navigationStack.length > 0 && (
+            <div className="flex items-center gap-2 mt-3 text-sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => handleBreadcrumbClick(-1)}
+                className="h-7 px-2 text-primary hover:text-primary"
+              >
+                <Home className="h-3 w-3 mr-1" />
+                You
+              </Button>
+              {navigationStack.map((item, index) => (
+                <div key={item.userId} className="flex items-center gap-2">
+                  <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleBreadcrumbClick(index)}
+                    className={`h-7 px-2 ${index === navigationStack.length - 1 ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    {item.name}
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         {isStageComplete && (
           <Badge className="bg-primary text-primary-foreground text-lg px-4 py-2">
@@ -187,7 +229,7 @@ const StageTree = () => {
           {networkTree.length > 0 || stageNumber === 1 ? (
             <div className="overflow-x-auto">
               <StageTreeView
-                currentUser={user}
+                currentUser={viewedUserProfile || user}
                 networkTree={networkTree}
                 stageNumber={stageNumber}
                 onMemberClick={handleMemberClick}
@@ -197,11 +239,13 @@ const StageTree = () => {
             <div className="text-center py-12">
               <Users className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
               <h3 className="text-lg font-semibold mb-2">
-                No Stage {stageNumber - 1} Completers Yet
+                {isViewingOwnTree ? "No Stage " + (stageNumber - 1) + " Completers Yet" : "No Network Yet"}
               </h3>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Members will appear in this stage view once they complete Stage {stageNumber - 1}.
-                Help your recruits grow their networks to unlock higher stages.
+                {isViewingOwnTree 
+                  ? `Members will appear in this stage view once they complete Stage ${stageNumber - 1}. Help your recruits grow their networks to unlock higher stages.`
+                  : `This member doesn't have any recruits yet in their network.`
+                }
               </p>
             </div>
           )}
@@ -246,6 +290,7 @@ const StageTree = () => {
         </CardContent>
       </Card>
     </div>
+    </PageTransition>
   );
 };
 

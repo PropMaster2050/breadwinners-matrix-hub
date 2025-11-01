@@ -7,7 +7,7 @@ interface TreeNodeProps {
   member: NetworkMember;
   stageNumber: number;
   level: number;
-  onMemberClick?: (memberId: string) => void;
+  onMemberClick?: (memberId: string, memberName: string) => void;
   isLocked?: boolean;
 }
 
@@ -33,7 +33,7 @@ export const TreeNode = ({ member, stageNumber, level, onMemberClick, isLocked }
             ? 'cursor-not-allowed' 
             : 'cursor-pointer hover:scale-110'
         }`}
-        onClick={() => !locked && onMemberClick?.(member.user_id)}
+        onClick={() => !locked && onMemberClick?.(member.user_id, member.full_name)}
       >
         {/* Completion Badge */}
         {!locked && isCompleted && (

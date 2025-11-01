@@ -7,7 +7,7 @@ interface StageTreeViewProps {
   currentUser: any;
   networkTree: NetworkMember[];
   stageNumber: number;
-  onMemberClick?: (memberId: string) => void;
+  onMemberClick?: (memberId: string, memberName: string) => void;
 }
 
 export const StageTreeView = ({ 

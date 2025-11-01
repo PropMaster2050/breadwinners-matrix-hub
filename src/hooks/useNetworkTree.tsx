@@ -26,24 +26,34 @@ export interface StageData {
   is_complete: boolean;
 }
 
-export const useNetworkTree = (stageNumber: number) => {
+export const useNetworkTree = (stageNumber: number, viewingUserId?: string) => {
   const { user } = useAuth();
   const [networkTree, setNetworkTree] = useState<NetworkMember[]>([]);
   const [stageData, setStageData] = useState<StageData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [viewedUserProfile, setViewedUserProfile] = useState<any>(null);
 
   const fetchNetworkTree = async () => {
-    if (!user?.id) return;
+    const targetUserId = viewingUserId || user?.id;
+    if (!targetUserId) return;
 
     try {
       setLoading(true);
 
-      // Fetch ALL 6 direct recruits from network_tree
-      // Fetch direct links from network_tree (no embedded join to avoid RLS join issues)
+      // Fetch profile of the user we're viewing
+      const { data: viewedProfile } = await supabase
+        .from('profiles')
+        .select('user_id, full_name, username, avatar_url, current_stage, created_at')
+        .eq('user_id', targetUserId)
+        .single();
+      
+      setViewedUserProfile(viewedProfile);
+
+      // Fetch ALL direct recruits from network_tree
       const { data: directLinks, error: networkError } = await supabase
         .from('network_tree')
         .select('user_id, created_at, parent_id')
-        .eq('parent_id', user.id)
+        .eq('parent_id', targetUserId)
         .order('created_at', { ascending: true });
 
       if (networkError) {
@@ -92,7 +102,7 @@ export const useNetworkTree = (stageNumber: number) => {
           const { data: commission } = await supabase
             .from('commissions')
             .select('amount, stage_number, created_at')
-            .eq('upline_user_id', user.id)
+            .eq('upline_user_id', targetUserId)
             .eq('recruit_user_id', recruit.user_id)
             .eq('stage_number', stageNumber)
             .maybeSingle();
@@ -273,7 +283,7 @@ export const useNetworkTree = (stageNumber: number) => {
     return () => {
       supabase.removeChannel(stageChannel);
     };
-  }, [user?.id, stageNumber]);
+  }, [user?.id, stageNumber, viewingUserId]);
 
-  return { networkTree, stageData, loading, refetch: fetchNetworkTree };
+  return { networkTree, stageData, loading, refetch: fetchNetworkTree, viewedUserProfile };
 };
