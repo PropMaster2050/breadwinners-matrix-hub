@@ -296,7 +296,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Registration started', { username: userData.username });
       
-      // 1) Validate E-PIN exists (read-only). Use maybeSingle to avoid throwing.
+      // 1) Check if username already exists
+      const cleanUsername = userData.username.trim();
+      const { data: existingUser, error: usernameCheckError } = await supabase
+        .from('profiles')
+        .select('username')
+        .ilike('username', cleanUsername)
+        .maybeSingle();
+
+      if (usernameCheckError) {
+        console.error('Username check error:', usernameCheckError);
+      }
+
+      if (existingUser) {
+        toast({ 
+          title: 'Username already taken', 
+          description: 'This username is already registered. Please choose a different username.', 
+          variant: 'destructive' 
+        });
+        return false;
+      }
+
+      // 2) Validate E-PIN exists (read-only). Use maybeSingle to avoid throwing.
       const epinCode = (userData.epin || '').trim().toUpperCase();
       if (!epinCode) {
         toast({ title: 'Registration failed', description: 'E-Pin is required', variant: 'destructive' });
@@ -324,11 +345,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // 2) Create auth user with alias to allow multi-account per email
+      // 3) Create auth user with alias to allow multi-account per email
       console.log('Creating auth user');
       const redirectUrl = `${window.location.origin}/login`;
       const realEmail = (userData.email || '').trim();
-      const aliasEmail = `${userData.username.toLowerCase().replace(/\s+/g, '')}+${Date.now()}@breadwinners.app`;
+      const aliasEmail = `${cleanUsername.toLowerCase().replace(/\s+/g, '')}+${Date.now()}@breadwinners.app`;
       
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: aliasEmail,
@@ -336,13 +357,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            full_name: userData.fullName,
-            username: userData.username,
-            phone: userData.mobile,
+            full_name: userData.fullName.trim(),
+            username: cleanUsername,
+            phone: userData.mobile.trim(),
             id_number: userData.idNumber,
-            referrer_code: userData.sponsorId || null,
+            referrer_code: userData.sponsorId?.trim() || null,
             own_referral_code: `BW${Math.floor(100000 + Math.random() * 900000)}`,
-            physical_address: userData.physicalAddress,
+            physical_address: userData.physicalAddress?.trim(),
             province: userData.province,
             age: userData.age,
             gender: userData.gender,
@@ -354,7 +375,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('Auth signup result:', { signUpData, signUpError });
 
       if (signUpError) {
-        toast({ title: 'Registration failed', description: signUpError.message || 'Could not create account', variant: 'destructive' });
+        // Handle specific error cases
+        if (signUpError.message?.includes('duplicate') || signUpError.message?.includes('already exists')) {
+          toast({ 
+            title: 'Registration failed', 
+            description: 'This username or email is already registered. Please try a different one.', 
+            variant: 'destructive' 
+          });
+        } else {
+          toast({ 
+            title: 'Registration failed', 
+            description: signUpError.message || 'Could not create account. Please try again.', 
+            variant: 'destructive' 
+          });
+        }
         return false;
       }
 
